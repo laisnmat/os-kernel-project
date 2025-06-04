@@ -1,0 +1,48 @@
+# racine du projet
+root = true
+
+# Règles communes à tous les fichiers
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Fichiers C et header
+[*.c]
+indent_style = space
+indent_size = 4
+
+[*.h]
+indent_style = space
+indent_size = 4
+
+# Fichiers assembleur GNU (.S)
+[*.S]
+indent_style = tab
+tab_width = 8
+trim_trailing_whitespace = false  # important pour les labels en colonne
+
+# Fichiers makefile (respect du tab obligatoire)
+[Makefile]
+indent_style = tab
+
+# Fichiers shell/bash
+[*.sh]
+indent_style = space
+indent_size = 4
+
+# Fichiers QEMU ou config spéciaux
+[*.lds]
+indent_style = space
+indent_size = 4
+
+[*.ld]
+indent_style = space
+indent_size = 4
+
+[*.cfg]
+indent_style = space
+indent_size = 4

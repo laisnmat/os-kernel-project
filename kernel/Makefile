@@ -104,7 +104,7 @@ bochs: cd.iso
 ### Generic rules ###
 $(OUTPUT)/%.d: %.c | $(OUTPUT)
 	@echo -n "$(@D)/" > $@
-	$(DEP) $(INCLUDES) -MM $< >> $@
+	$(DEP) $(INCLUDES) -MM -MF $@ $<
 
 $(OUTPUT)/%.d: %.S | $(OUTPUT)
 	@echo -n "$(@D)/" > $@
@@ -145,4 +145,3 @@ $(OUTPUT):
 .PHONY: clean
 clean:
 	rm -rf $(OUTPUT) kernel.bin cd.iso
-

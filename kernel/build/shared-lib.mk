@@ -56,7 +56,7 @@ endif
 
 $(SHARED_LIB_OUT)/%.d: %.c | $(SHARED_LIB_OUT)
 	@echo -n "$(@D)/" > $@
-	$(DEP) -MM $< $(SHARED_LIB_INC) >> $@
+	$(DEP) -MM -MF $@ $< $(SHARED_LIB_INC)
 
 $(SHARED_LIB_OUT)/%.d: %.S | $(SHARED_LIB_OUT)
 	@echo -n "$(@D)/" > $@
@@ -75,4 +75,3 @@ $(SHARED_LIB_OUT)/%.o: %.S | $(SHARED_LIB_OUT)
 
 $(SHARED_LIB_OUT):
 	$(MKDIR) -p $@
-

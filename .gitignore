@@ -5,3 +5,10 @@ kernel/kernel.bin
 user/user.debug
 user/user.bin
 kernel/kbd_linux/keymap.c
+bin/scripts/*.out
+.idea/**
+!.idea/runConfigurations
+!.idea/runConfigurations/Debug_Qemu.xml
+!.idea/runConfigurations/Run_Qemu.xml
+!.idea/tools
+!.idea/tools/External Tools.xml

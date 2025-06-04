@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Debug Qemu" type="CLion_Remote" activateToolWindowBeforeRun="false" version="1" remoteCommand="localhost:1234" symbolFile="$ProjectFileDir$/kernel/kernel.bin" sysroot="">
+    <debugger kind="GDB" isBundled="true" />
+    <method v="2">
+      <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_debug" />
+      <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_debug" />
+    </method>
+  </configuration>
+</component>
