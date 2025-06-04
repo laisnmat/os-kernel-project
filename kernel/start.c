@@ -12,7 +12,7 @@ void kernel_start(void)
 	char nom[PROCESS_NAME_MAX];
 	for (int i = 1; i<=NBPROC; i++) {
 		snprintf(nom, PROCESS_NAME_MAX, "proc%d", i);
-		cree_processus(proc1, nom);
+		create_process(proc1, nom);
 	}
 	unsigned long quartz, ticks;
 	clock_settings(&quartz, &ticks);

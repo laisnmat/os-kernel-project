@@ -43,7 +43,7 @@ void init_proc1();
 void idle();
 void proc1();
 void ordonnance();
-int32_t mon_pid();
-char *mon_nom();
-int32_t cree_processus(void (*code)(void), char *nom);
+int32_t running_process_pid();
+char *running_process_name();
+int32_t create_process(void (*code)(void), char *nom);
 #endif //PROCESSUS_H
