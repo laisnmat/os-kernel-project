@@ -1,0 +1,15 @@
+Checks: >
+  -*,
+  bugprone-*,
+  performance-*,
+  readability-*,
+  modernize-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*
+
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+FormatStyle: file
+CheckOptions:
+  - key:             readability-magic-numbers.IgnoredNumericLiterals
+    value:           '0,1,2'
