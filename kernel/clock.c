@@ -1,4 +1,6 @@
 #include "clock.h"
+
+#include "process.h"
 #include "../shared/stdio.h"
 
 uint32_t nb_interruptions = 0;
@@ -19,6 +21,7 @@ void tic_PIT(void)
     const uint32_t seconds = nb_interruptions / CLOCKFREQ;
     sprintf(buffer, "%02d:%02d:%02d", seconds / 3600, (seconds / 60) % 60, seconds % 60);
     display_char_top_right(buffer);
+    ordonnance();
 }
 
 void init_traitant_IT(int32_t num_IT, void (*traitant)(void))
