@@ -1,7 +1,7 @@
 #ifndef PARAMS
-#define PARAMS 
-#include <stdint.h>
-#include <string.h>
+#define PARAMS
+#include "../shared/stdint.h"
+#include "../shared/string.h"
 // Taille de la fenêtre
 #define NB_LIGNE 25
 #define NB_COLONNE 80
