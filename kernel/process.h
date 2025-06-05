@@ -1,6 +1,6 @@
 #ifndef PROCESSUS_H
 #define PROCESSUS_H
-#include "stdint.h"
+#include "../shared/stdint.h"
 #include "stddef.h"
 #include "string.h"
 #include "cpu.h"
@@ -16,7 +16,8 @@
 #define ESI 3
 #define EDI 4
 
-typedef enum State {
+typedef enum State
+{
     STATE_RUNNING,
     STATE_READY,
     STATE_BLOCKED_MSG,
@@ -27,13 +28,15 @@ typedef enum State {
     STATE_ZOMBIE
 } State;
 
-typedef struct process {
+typedef struct process
+{
     int32_t pid;
     char name[PROCESS_NAME_MAX];
     State state;
     int32_t regs[NUMBER_REGISTERS];
     int32_t *execution_stack;
     struct process *suiv;
+    uint32_t time_before_wake_up;
 } process;
 
 extern process *process_array[NBPROC];
@@ -46,4 +49,6 @@ void ordonnance();
 int32_t running_process_pid();
 char *running_process_name();
 int32_t create_process(void (*code)(void), char *nom);
+void sleep(uint32_t seconds);
+
 #endif //PROCESSUS_H
