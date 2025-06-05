@@ -5,6 +5,7 @@
 #define CLOCKFREQ 60
 
 #include "display.h"
+#include "../shared/stdlib.h"
 #include "boot/processor_structs.h"
 #include "segment.h"
 
@@ -16,11 +17,11 @@ void init_traitant_IT(int32_t num_IT, void (*traitant)(void));
 
 void masque_IRQ(uint32_t num_IRQ, bool masque);
 
-void clock_settings(unsigned long *quartz, unsigned long *ticks);
+void clock_settings(uint32_t *quartz, uint32_t *ticks);
 
-unsigned long current_clock();
+uint32_t current_clock();
 
-void wait_clock(unsigned long clock);
+void wait_clock(uint32_t clock);
 
 extern void traitant_IT_32(void);
 
