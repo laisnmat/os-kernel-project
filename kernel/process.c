@@ -1,92 +1,11 @@
 #include "process.h"
 
-#include "clock.h"
-#include "../shared/debug.h"
-
 process *process_array[NBPROC];
-process *head_ready_process;
-process *tail_ready_process;
+process *running_process = NULL;
+LIST_HEAD(head_ready);
+LIST_HEAD(head_sleeping);
 
-process *head_sleeping_process;
-process *tail_sleeping_process;
-
-void insert_ready_head(process *new_process)
-{
-    process *prev_head = head_ready_process;
-    head_ready_process = new_process;
-    if (prev_head != NULL)
-        prev_head->state = STATE_READY;
-    new_process->state = STATE_RUNNING;
-    //new_process->suiv = prev_head; pour l'instant on ne veut pas que l'ancienne tete soit le suivant mais plutot à la queue
-}
-
-void insert_ready_tail(process *new_process)
-{
-    process *prev_tail = tail_ready_process;
-    tail_ready_process = new_process;
-    if (prev_tail != NULL)
-        prev_tail->suiv = new_process;
-    new_process->suiv = NULL;
-    new_process->state = STATE_READY;
-}
-
-void insert_sleeping_head(process *new_process)
-{
-    new_process->suiv = head_sleeping_process;
-    new_process->state = STATE_SLEEPING;
-    head_sleeping_process = new_process;
-}
-
-void insert_sleeping_tail(process *new_process)
-{
-    process *prev_tail = tail_sleeping_process;
-    tail_sleeping_process = new_process;
-    if (prev_tail != NULL)
-        prev_tail->suiv = new_process;
-    new_process->suiv = NULL;
-    new_process->state = STATE_SLEEPING;
-}
-
-void insert_sleeping_by_time(process *new_process)
-{
-    process *current_process = head_sleeping_process;
-    if (current_process == NULL || current_process->time_before_wake_up > new_process->
-        time_before_wake_up)
-    {
-        insert_sleeping_head(new_process);
-        return;
-    }
-    while (current_process->suiv != NULL && current_process->suiv->time_before_wake_up <
-           new_process->time_before_wake_up)
-    {
-        current_process = current_process->suiv;
-    }
-    if (current_process->suiv == NULL)
-    {
-        insert_sleeping_tail(new_process);
-        return;
-    }
-    new_process->suiv = current_process->suiv;
-    current_process->suiv = new_process;
-    new_process->state = STATE_SLEEPING;
-}
-
-void sleep(uint32_t seconds)
-{
-    uint32_t nb_ticks_before_wake_up = seconds * CLOCKFREQ + current_clock();
-    head_ready_process->time_before_wake_up = nb_ticks_before_wake_up;
-    process *prev_head_ready = head_ready_process;
-    process *new_head_ready = head_ready_process->suiv;
-    insert_sleeping_by_time(head_ready_process);
-    head_ready_process = new_head_ready;
-    wait_clock(nb_ticks_before_wake_up);
-    //enlever dans liste des waiting
-    head_sleeping_process = head_sleeping_process->suiv;
-    //inserer dans la queue le processus
-    insert_ready_tail(prev_head_ready);
-}
-
-void init_idle()
+void start_idle()
 {
     const int32_t pid = 0;
     const char name[PROCESS_NAME_MAX] = "idle";
@@ -96,12 +15,24 @@ void init_idle()
     idle->pid = pid;
     strcpy(idle->name, name);
     idle->state = state;
-    idle->execution_stack = mem_alloc(STACK_SIZE * sizeof(int32_t));
-    insert_ready_head(idle);
-    insert_ready_tail(idle);
+    idle->prio = 1;
+    running_process = idle;
 }
 
-int32_t create_process(void (*code)(void), char *nom)
+
+void exit(int retval)
+{
+    if (running_process != NULL)
+    {
+        running_process->state = STATE_ZOMBIE;
+        running_process->retval = retval;
+    }
+    schedule();
+    __builtin_unreachable();
+}
+
+
+int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name, void *arg)
 {
     uint32_t pid = 0;
     while (pid < NBPROC && process_array[pid] != NULL)
@@ -113,60 +44,67 @@ int32_t create_process(void (*code)(void), char *nom)
         return -1;
     }
     process_array[pid] = mem_alloc(sizeof(process));
-    process *current_process = process_array[pid];
-    current_process->pid = pid;
-    strcpy(current_process->name, nom);
-    current_process->state = STATE_READY;
-    current_process->execution_stack = mem_alloc(STACK_SIZE * sizeof(int32_t));
-    current_process->execution_stack[STACK_SIZE - 1] = (int32_t)code;
-    current_process->regs[ESP] = (int32_t)&current_process->execution_stack[STACK_SIZE - 1];
-    insert_ready_tail(current_process);
+    process *current_p = process_array[pid];
+    current_p->pid = pid;
+    strcpy(current_p->name, name);
+    current_p->state = STATE_READY;
+    current_p->execution_stack = mem_alloc(ssize * sizeof(int32_t));
+    current_p->execution_stack[ssize - 3] = (int32_t)pt_func;
+    current_p->execution_stack[ssize - 2] = (int32_t)exit;
+    current_p->execution_stack[ssize - 1] = (int32_t)arg;
+    /* Execution stack layout:
+     *  +--------------------+
+     *  |       arg          | ssize - 1
+     *  +--------------------+
+     *  *       exit         | ssize - 2
+     *  +--------------------+
+     *  |     call pt_func   | ssize - 3
+     *  +--------------------+ <-- %esp
+     */
+    current_p->regs[ESP] = (int32_t)&current_p->execution_stack[ssize - 3];
+    current_p->prio = prio;
+    queue_add(current_p, &head_ready, process, next, prio);
     return pid;
 }
 
-
-void ordonnance()
+int getprio(int pid)
 {
-    process *next_process = head_ready_process->suiv;
-    if (next_process == NULL)
+    // Processus n'existe pas
+    if (pid < 0 || pid >= NBPROC || process_array[pid] == NULL)
     {
-        //si pas d'autre process disponible, alors nous gardons le process actuel
-        return;
+        return -1;
     }
-    process *current_process = head_ready_process;
-    insert_ready_head(next_process);
-    insert_ready_tail(current_process);
-    ctx_sw(current_process->regs, next_process->regs);
+    return process_array[pid]->prio;
 }
 
-int32_t running_process_pid()
+int chprio(int pid, int newprio)
 {
-    return head_ready_process->pid;
-}
-
-char *running_process_name()
-{
-    return head_ready_process->name;
-}
-
-void idle()
-{
-    for (;;)
+    // Processus n'existe pas ou priorité invalide
+    process *p = process_array[pid];
+    if (pid < 0 || pid >= NBPROC || p == NULL || newprio <= 0 || newprio > MAXPRIO)
     {
-        sti(); // usage de sti et cli avant la phase 5 (possible après)
-        hlt(); // autre exception possible: le code de vos tests
-        cli(); // JAMAIS de sti ou de cli dans le reste de votre kernel
+        return -1;
     }
+    int oldprio = p->prio;
+    p->prio = newprio;
+    // Repositionner le processus dans la file d'attente si nécessaire
+    queue_del(p, next);
+    queue_add(p, &head_ready, process, next, prio);
+    return oldprio;
 }
 
-void proc1(void)
+int getpid(void)
 {
-    for (;;)
-    {
-        printf("[%s] pid = %i\n", running_process_name(), running_process_pid());
-        for (int32_t i = 0; i < 100 * 1000 * 1000; i++);
-        sti();
-        hlt();
-        cli();
-    }
+    return running_process->pid;
+}
+
+
+void wait_clock(unsigned long clock)
+{
+    process *current_p = running_process;
+    current_p->state = STATE_SLEEPING;
+    current_p->wakeup_time = clock + current_clock();
+    queue_add_by_time(current_p, &head_sleeping, process, next, wakeup_time);
+    schedule();
+    __builtin_unreachable();
 }
