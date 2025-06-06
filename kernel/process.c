@@ -28,7 +28,7 @@ void exit(int retval)
         running_process->retval = retval;
     }
     schedule();
-    __builtin_unreachable();
+    assert(false, "Exit called with no running process");
 }
 
 
@@ -106,5 +106,4 @@ void wait_clock(unsigned long clock)
     current_p->wakeup_time = clock + current_clock();
     queue_add_by_time(current_p, &head_sleeping, process, next, wakeup_time);
     schedule();
-    __builtin_unreachable();
 }
