@@ -3,7 +3,7 @@
 #include "process.h"
 #include "../shared/queue.h"
 
-#include <stdlib.h>
+#include "../shared/stdlib.h"
 
 void schedule(void)
 {

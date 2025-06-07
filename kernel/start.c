@@ -8,8 +8,12 @@
 
 int helloworld1(void *arg)
 {
-    printf("Hello world 1 %s\n", (char *)arg);
-    return 0;
+    if (true)
+    {
+        printf("Hello world 1 : avec exit et args : %s\n", (char *)arg);
+        exit(1);
+    }
+    return -1;
 }
 
 int helloworld2(void *arg)
@@ -41,7 +45,7 @@ void kernel_start(void)
 {
     efface_ecran();
     start_idle();
-    start(helloworld1, STACK_SIZE, 100, "HelloWorld1", "TEST");
+    start(helloworld1, STACK_SIZE, 100, "HelloWorld1", "Test 1");
     start(helloworld2, STACK_SIZE, 200, "HelloWorld2", NULL);
     start(helloworld3, STACK_SIZE, 50, "HelloWorld3", NULL);
 

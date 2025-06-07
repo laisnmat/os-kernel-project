@@ -19,18 +19,31 @@ void start_idle()
     running_process = idle;
 }
 
-
 void exit(int retval)
 {
-    if (running_process != NULL)
-    {
-        running_process->state = STATE_ZOMBIE;
-        running_process->retval = retval;
-    }
+    printf("RETVAL: %d\n", retval);
+    running_process->state = STATE_ZOMBIE;
+    running_process->retval = retval;
     schedule();
-    assert(false, "Exit called with no running process");
+    while (1)
+    {
+    }
 }
 
+void process_wrapper(void)
+{
+    /** Execution stack layout:
+    *  +----------------------+
+    *  |         arg          | ssize - 1
+    *  +----------------------+
+    *  *       pt_func        | ssize - 2
+    *  +----------------------+
+    **/
+    int (*pt_func)(void *) = (int (*)(void *))running_process->execution_stack[STACK_SIZE - 2];
+    void *arg = (void *)running_process->execution_stack[STACK_SIZE - 1];
+    int retval = pt_func(arg);
+    exit(retval);
+}
 
 int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name, void *arg)
 {
@@ -49,18 +62,18 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     strcpy(current_p->name, name);
     current_p->state = STATE_READY;
     current_p->execution_stack = mem_alloc(ssize * sizeof(int32_t));
-    current_p->execution_stack[ssize - 3] = (int32_t)pt_func;
-    current_p->execution_stack[ssize - 2] = (int32_t)exit;
+    /** Execution stack layout:
+    *  +----------------------+
+    *  |         arg          | ssize - 1
+    *  +----------------------+
+    *  *      pt_func         | ssize - 2
+    *  +----------------------+
+    *  | call process_wrapper | ssize - 3
+    *  +----------------------+ <-- %esp
+    **/
     current_p->execution_stack[ssize - 1] = (int32_t)arg;
-    /* Execution stack layout:
-     *  +--------------------+
-     *  |       arg          | ssize - 1
-     *  +--------------------+
-     *  *       exit         | ssize - 2
-     *  +--------------------+
-     *  |     call pt_func   | ssize - 3
-     *  +--------------------+ <-- %esp
-     */
+    current_p->execution_stack[ssize - 2] = (int32_t)pt_func;
+    current_p->execution_stack[ssize - 3] = (int32_t)process_wrapper;
     current_p->regs[ESP] = (int32_t)&current_p->execution_stack[ssize - 3];
     current_p->prio = prio;
     queue_add(current_p, &head_ready, process, next, prio);
@@ -97,7 +110,6 @@ int getpid(void)
 {
     return running_process->pid;
 }
-
 
 void wait_clock(unsigned long clock)
 {
