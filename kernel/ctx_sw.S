@@ -5,12 +5,15 @@
 ctx_sw:
     # sauvegarde du contexte de l'ancien processus
     movl 4(%esp), %eax
+    test %eax, %eax
+    jz restore
     movl %ebx, (%eax)
     movl %esp, 4(%eax)
     movl %ebp, 8(%eax)
     movl %esi, 12(%eax)
-    movl %edi, 16(%eax)
+    movl %edi, 16(%eax) 
     # restauration du contexte du nouveau processus
+restore : 
     movl 8(%esp), %eax
     movl (%eax), %ebx
     movl 4(%eax), %esp

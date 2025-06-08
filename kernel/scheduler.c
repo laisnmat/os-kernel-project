@@ -5,28 +5,35 @@
 
 #include "../shared/stdlib.h"
 
-void schedule(void)
+void wakeup_processes()
 {
     process *p_sleep = queue_top(&head_sleeping, process, next);
     while (p_sleep != NULL && p_sleep->wakeup_time <= current_clock())
     {
         p_sleep->state = STATE_READY;
-        int pid = p_sleep->pid;
         queue_del(p_sleep, next);
-        queue_add(process_array[pid], &head_ready, process, next, prio);
+        queue_add(p_sleep, &head_ready, process, next, prio);
         p_sleep = queue_top(&head_sleeping, process, next);
     }
+}
 
+void schedule(void)
+{
+    wakeup_processes();
     process *next_process = queue_top(&head_ready, process, next);
-    if
-    (next_process == NULL || (running_process->state == STATE_RUNNING && next_process->prio <
-                              running_process->prio))
+    if (next_process == NULL || (running_process->state == STATE_RUNNING && next_process->prio <
+                                 running_process->prio))
     {
         // Si aucun processus prêt ou si le prochain processus est déjà prêt moins prio
         return;
     }
     process *current_p = running_process;
     next_process = queue_out(&head_ready, process, next);
+    if (running_process == NULL)
+    {
+        running_process = next_process;
+        ctx_sw(NULL, next_process->regs);
+    }
     if
     (current_p->state == STATE_RUNNING)
     {

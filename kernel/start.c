@@ -19,6 +19,7 @@ int helloworld1(void *arg)
 int helloworld2(void *arg)
 {
     printf("Hello world 2 : Je vais m'endormir\n");
+    start(helloworld1, STACK_SIZE, 255, "HelloWorld1", "child of helloworld2");
     wait_clock(300); // Attendre 100 ticks
     printf("Hello world 2 : Je me suis réveillé\n");
     return (int)arg;

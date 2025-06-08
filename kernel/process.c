@@ -4,6 +4,67 @@ process *process_array[NBPROC];
 process *running_process = NULL;
 LIST_HEAD(head_ready);
 LIST_HEAD(head_sleeping);
+LIST_HEAD(head_zombie);
+
+void destroy(process *p_to_destroy)
+{
+    if (p_to_destroy->state != STATE_RUNNING)
+    {
+        queue_del(p_to_destroy, next);
+    }
+    else
+    {
+        running_process = NULL;
+    }
+    mem_free(p_to_destroy->execution_stack, STACK_SIZE * sizeof(int32_t));
+    mem_free(p_to_destroy, sizeof(process));
+}
+
+
+void destroy_children(process *parent)
+{
+    //quand on set à l'état zombie :
+    process *child;
+    if (queue_empty(&parent->children.head))
+        return;
+    queue_for_each(child, &parent->children.head, process, children.next)
+    {
+        if (child->parent != NULL)
+        {
+            queue_del(child, parent->children.next);
+            child->parent = NULL;
+        }
+        if (child->state == STATE_ZOMBIE)
+        {
+            destroy(child);
+        }
+    }
+}
+
+void set_zombie(process *p)
+{
+    State prev_state = p->state;
+    p->state = STATE_ZOMBIE;
+    if (prev_state != STATE_RUNNING)
+    {
+        queue_del(p, next);
+    }
+    queue_push_head(p, &head_zombie, process, next);
+}
+
+void terminate(process *p)
+{
+    destroy_children(p);
+    if (p->parent == NULL)
+    {
+        destroy(p);
+    }
+    else
+    {
+        set_zombie(p);
+    }
+    schedule();
+}
 
 void start_idle()
 {
@@ -16,18 +77,32 @@ void start_idle()
     strcpy(idle->name, name);
     idle->state = state;
     idle->prio = 1;
+    INIT_LIST_HEAD(&idle->children.head);
+    idle->parent = NULL;
     running_process = idle;
 }
 
 void exit(int retval)
 {
     printf("RETVAL: %d\n", retval);
-    running_process->state = STATE_ZOMBIE;
     running_process->retval = retval;
-    schedule();
+    terminate(running_process);
     while (1)
     {
     }
+}
+
+int kill(int pid)
+{
+    // verifier que le processus appelant est bien le parrent du proc à tuer
+    if (pid < 0 || pid >= NBPROC || process_array[pid] == NULL)
+    {
+        return -1; // Processus n'existe pas
+    }
+    process *target_process = process_array[pid];
+    target_process->retval = 0;
+    terminate(target_process);
+    return 0;
 }
 
 void process_wrapper(void)
@@ -39,13 +114,15 @@ void process_wrapper(void)
     *  *       pt_func        | ssize - 2
     *  +----------------------+
     **/
-    int (*pt_func)(void *) = (int (*)(void *))running_process->execution_stack[STACK_SIZE - 2];
+    int (*pt_func)(void *) = (int (*)(void *))running_process->execution_stack[
+        STACK_SIZE - 2];
     void *arg = (void *)running_process->execution_stack[STACK_SIZE - 1];
     int retval = pt_func(arg);
     exit(retval);
 }
 
-int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name, void *arg)
+int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name,
+          void *arg)
 {
     uint32_t pid = 0;
     while (pid < NBPROC && process_array[pid] != NULL)
@@ -76,7 +153,11 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     current_p->execution_stack[ssize - 3] = (int32_t)process_wrapper;
     current_p->regs[ESP] = (int32_t)&current_p->execution_stack[ssize - 3];
     current_p->prio = prio;
+    INIT_LIST_HEAD(&current_p->children.head);
+    current_p->parent = running_process;
+    queue_push_head(current_p, &(current_p->parent->children.head), process, children.next);
     queue_add(current_p, &head_ready, process, next, prio);
+    schedule();
     return pid;
 }
 
@@ -101,8 +182,12 @@ int chprio(int pid, int newprio)
     int oldprio = p->prio;
     p->prio = newprio;
     // Repositionner le processus dans la file d'attente si nécessaire
-    queue_del(p, next);
-    queue_add(p, &head_ready, process, next, prio);
+    if (p->state == STATE_READY)
+    {
+        queue_del(p, next);
+        queue_add(p, &head_ready, process, next, prio);
+    }
+    schedule();
     return oldprio;
 }
 

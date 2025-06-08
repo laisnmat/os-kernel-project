@@ -21,21 +21,34 @@
 #define ESI 3
 #define EDI 4
 #define MAXPRIO 256
-#define queue_add_by_time(ptr_elem, head, type, listfield, wakeuptime)                 \
-    do {                                                                  \
-        link *__cur_link=head;                                        \
-        type *__elem = (ptr_elem);                                    \
-        link *__elem_link=&((__elem)->listfield);                     \
-        assert((__elem_link->prev == 0) && (__elem_link->next == 0)); \
-    do  __cur_link=__cur_link->next;                              \
-    while ( (__cur_link != head) &&                               \
-    (((queue_entry(__cur_link,type,listfield))->wakeuptime)\
-    > ((__elem)->wakeuptime)) );                    \
-    __elem_link->next=__cur_link;                                 \
-    __elem_link->prev=__cur_link->prev;                           \
-    __cur_link->prev->next=__elem_link;                           \
-    __cur_link->prev=__elem_link;                                 \
+
+#define queue_add_by_time(ptr_elem, head, type, listfield, wakeuptime) \
+    do {                                                               \
+        link *__cur_link=head;                                         \
+        type *__elem = (ptr_elem);                                     \
+        link *__elem_link=&((__elem)->listfield);                      \
+        assert((__elem_link->prev == 0) && (__elem_link->next == 0));  \
+    do  __cur_link=__cur_link->next;                                   \
+    while ( (__cur_link != head) &&                                    \
+    (((queue_entry(__cur_link,type,listfield))->wakeuptime)            \
+    > ((__elem)->wakeuptime)) );                                       \
+    __elem_link->next=__cur_link;                                      \
+    __elem_link->prev=__cur_link->prev;                                \
+    __cur_link->prev->next=__elem_link;                                \
+    __cur_link->prev=__elem_link;                                      \
 } while (0)
+
+#define queue_push_head(ptr_elem, head, type, listfield)               \
+    do {                                                               \
+        link *__head_link = (head);                                    \
+        type *__elem      = (type *)(ptr_elem);                        \
+        link *__elem_link = &(__elem->listfield);                      \
+        assert(__elem_link->prev == NULL && __elem_link->next == NULL);\
+        __elem_link->next           = __head_link;                     \
+        __elem_link->prev           = __head_link->prev;               \
+        __head_link->prev->next     = __elem_link;                     \
+        __head_link->prev           = __elem_link;                     \
+    } while (0)
 
 
 typedef enum State
@@ -50,6 +63,7 @@ typedef enum State
     STATE_ZOMBIE
 } State;
 
+
 typedef struct process
 {
     int32_t pid;
@@ -61,13 +75,23 @@ typedef struct process
     link next;
     unsigned long wakeup_time;
     int retval;
+    struct process *parent;
+
+    struct
+    {
+        link head;
+        link next;
+    } children;
 } process;
 
+
+void destroy(process *p_to_destroy);
 extern process *process_array[NBPROC];
 extern void ctx_sw(int32_t *prev_regs, int32_t *next_regs);
 extern process *running_process;
 extern link head_ready;
 extern link head_sleeping;
+extern link head_zombie;
 // Les primitives de gestions des processus
 
 /**
