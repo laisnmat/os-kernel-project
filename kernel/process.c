@@ -9,9 +9,23 @@ LIST_HEAD(head_sleeping);
 LIST_HEAD(head_zombie);
 #define MAX(x, y) (((x)>(y))?(x):(y))
 
+void set_zombie(process *p)
+{
+    State prev_state = p->state;
+    p->state = STATE_ZOMBIE;
+    if (prev_state != STATE_RUNNING)
+    {
+        queue_del(p, next);
+    }
+    queue_push_head(p, &head_zombie, process, next);
+}
 
 void destroy(process *p_to_destroy)
 {
+    if (p_to_destroy == running_process) {
+        set_zombie(p_to_destroy);
+        return;
+    }
     if (p_to_destroy->state != STATE_RUNNING)
     {
         queue_del(p_to_destroy, next);
@@ -48,17 +62,6 @@ void destroy_children(process *parent)
         }
         child = next_child;
     }
-}
-
-void set_zombie(process *p)
-{
-    State prev_state = p->state;
-    p->state = STATE_ZOMBIE;
-    if (prev_state != STATE_RUNNING)
-    {
-        queue_del(p, next);
-    }
-    queue_push_head(p, &head_zombie, process, next);
 }
 
 void terminate(process *p)

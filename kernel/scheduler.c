@@ -5,6 +5,22 @@
 
 #include "../shared/stdlib.h"
 
+void clean_zombies_processes()
+{
+    if (queue_empty(&head_zombie)) return;
+
+    process *zombie = queue_entry(head_zombie.next, process, next);
+    while (&zombie->next != &head_zombie)
+    {
+        process *next_zombie = queue_entry(zombie->next.next, process, next);
+        if (zombie->parent == NULL)
+        {
+            destroy(zombie);
+        }
+        zombie = next_zombie;
+    }
+}
+
 void wakeup_processes()
 {
     process *p_sleep = queue_top(&head_sleeping, process, next);
@@ -19,6 +35,7 @@ void wakeup_processes()
 
 void schedule(void)
 {
+    clean_zombies_processes();
     wakeup_processes();
     process *next_process = queue_top(&head_ready, process, next);
     if (next_process == NULL || (running_process->state == STATE_RUNNING && next_process->prio <
