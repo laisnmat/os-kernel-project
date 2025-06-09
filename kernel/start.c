@@ -1,10 +1,9 @@
 #include "debugger.h"
-#include "cpu.h"
-#include "stdio.h"
 #include "display.h"
 #include "clock.h"
 #include "process.h"
 
+int test_run(int n);
 
 int helloworld1(void *arg)
 {
@@ -16,44 +15,54 @@ int helloworld1(void *arg)
     return -1;
 }
 
-int helloworld2(void *arg)
-{
-    printf("Hello world 2 : Je vais m'endormir\n");
-    start(helloworld1, STACK_SIZE, 255, "HelloWorld1", "child of helloworld2");
-    wait_clock(300); // Attendre 100 ticks
-    printf("Hello world 2 : Je me suis réveillé\n");
-    return (int)arg;
-}
-
 int helloworld3(void *arg)
 {
     printf("Hello world 3\n");
     return (int)arg;
 }
 
+int helloworld2(void *arg)
+{
+    printf("Hello world 2 : Je vais m'endormir\n");
+    printf("pid start hw1 : %d\n",
+           start(helloworld1, MAX_STACK_SIZE, 255, "HW1", "child1 of helloworld2"));
+    printf("pid start hw3 : %d\n", start(helloworld3, MAX_STACK_SIZE, 10, "HW3", (void *)2));
+    wait_clock(300); // Attendre 100 ticks
+    printf("Hello world 2 : Je me suis réveillé\n");
+    return (int)arg;
+}
+
+int start_test(void *arg)
+{
+    for (int i = 1; i <= 19; i++)
+    {
+        printf("\n################ Test %d ################\n", i);
+        test_run(i);
+        printf("\n##############Fin Test %d ###############\n\n", i);
+    }
+    return (int)arg;
+}
 
 void idle()
 {
     for (;;)
     {
-        sti(); // usage de sti et cli avant la phase 5 (possible après)
+        sti();
         hlt(); // autre exception possible: le code de vos tests
-        cli(); // JAMAIS de sti ou de cli dans le reste de votre kernel
+        cli();
     }
 }
 
 void kernel_start(void)
 {
     efface_ecran();
-    start_idle();
-    start(helloworld1, STACK_SIZE, 100, "HelloWorld1", "Test 1");
-    start(helloworld2, STACK_SIZE, 200, "HelloWorld2", NULL);
-    start(helloworld3, STACK_SIZE, 50, "HelloWorld3", NULL);
 
     unsigned long quartz, ticks;
     clock_settings(&quartz, &ticks);
     init_traitant_IT(32, traitant_IT_32);
     masque_IRQ(0, 0);
+    start_idle();
+    start(start_test, 256, 128, "StartTest", NULL);
     idle();
     while (1)
         hlt();

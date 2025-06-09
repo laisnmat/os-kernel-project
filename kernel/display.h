@@ -4,7 +4,8 @@
 #include "params.h"
 #include "stdbool.h"
 
-typedef struct params {
+typedef struct params
+{
     uint8_t ct;
     uint8_t cf;
     bool cl;
@@ -21,5 +22,7 @@ void efface_ecran(void);
 void traite_car(char c);
 
 void defilement(void);
+
+void cons_write(const char *str, long size);
 
 #endif //PSYS_BASE_DISPLAY_H

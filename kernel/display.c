@@ -49,10 +49,6 @@ void traite_car(char c)
         break;
     case LF:
         LIG_CURSOR++;
-        if (LIG_CURSOR >= NB_LIGNE)
-        {
-            defilement();
-        }
         COL_CURSOR = 0;
         break;
     case FF:
@@ -68,6 +64,10 @@ void traite_car(char c)
         COL_CURSOR++;
         break;
     }
+    if (LIG_CURSOR + (COL_CURSOR / NB_COLONNE) >= NB_LIGNE && COL_CURSOR % NB_COLONNE == 0)
+    {
+        defilement();
+    }
     place_curseur(LIG_CURSOR, COL_CURSOR);
 }
 
@@ -77,7 +77,7 @@ void defilement(void)
     {
         for (uint32_t j = 0; j < NB_COLONNE; j++)
         {
-            memmove(ptr_mem(i-1, j), ptr_mem(i, j), 2);
+            memmove(ptr_mem(i - 1, j), ptr_mem(i, j), 2);
         }
     }
     for (uint32_t j = 0; j < NB_COLONNE; j++)
@@ -92,5 +92,16 @@ void console_putbytes(char *chaine, int32_t taille)
     for (int32_t i = 0; i < taille; i++)
     {
         traite_car(chaine[i]);
+    }
+}
+
+void cons_write(const char *str, long size)
+{
+    if (str == NULL || size <= 0)
+        return;
+
+    for (long i = 0; i < size; i++)
+    {
+        traite_car(str[i]);
     }
 }

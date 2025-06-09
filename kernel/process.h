@@ -11,7 +11,8 @@
 #include "../shared/stdint.h"
 #include "../shared/queue.h"
 
-#define STACK_SIZE 256
+#define MAX_STACK_SIZE 0xFFFFFFFF
+
 #define NUMBER_REGISTERS 5
 #define PROCESS_NAME_MAX 16
 #define NBPROC 8
@@ -72,6 +73,7 @@ typedef struct process
     State state;
     int32_t regs[NUMBER_REGISTERS];
     int32_t *execution_stack;
+    unsigned long ssize;
     link next;
     unsigned long wakeup_time;
     int retval;
@@ -82,6 +84,8 @@ typedef struct process
         link head;
         link next;
     } children;
+
+    int wait_pid;
 } process;
 
 
@@ -101,7 +105,6 @@ extern link head_zombie;
  * Il est toujours en état de fonctionnement et ne se termine jamais.
  */
 void start_idle();
-
 /**
  * Démarrage d'un nouveau processus
  * @param pt_func Pointeur sur l'adresse du programme (de la fonction) à lancer dans le processus.
