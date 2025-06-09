@@ -94,6 +94,7 @@ void destroy(process *p_to_destroy);
 extern process *process_array[NBPROC];
 extern void ctx_sw(int32_t *prev_regs, int32_t *next_regs);
 extern process *running_process;
+extern process *process_self_killed;
 extern link head_ready;
 extern link head_sleeping;
 extern link head_zombie;

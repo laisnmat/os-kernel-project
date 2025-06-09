@@ -4,6 +4,7 @@
 #include "../shared/queue.h"
 process *process_array[NBPROC];
 process *running_process = NULL;
+process *process_self_killed = NULL;
 LIST_HEAD(head_ready);
 LIST_HEAD(head_sleeping);
 LIST_HEAD(head_zombie);
@@ -22,18 +23,19 @@ void set_zombie(process *p)
 
 void destroy(process *p_to_destroy)
 {
+    //cas où on s'auto-kill
     if (p_to_destroy == running_process) {
+        // (On pourrait remonter la condition, mais la garder dans le if est plus optimal, elle est réévaluée dans le scheduler)
+        // S'il existait un processus qui s'était auto tué mais qu'on a pas eu le temps de traiter
+        if (process_self_killed != NULL) {
+            //alors on le tue (pour ensuite prendre sa place)
+            destroy(process_self_killed);
+        }
         set_zombie(p_to_destroy);
+        process_self_killed = p_to_destroy;
         return;
     }
-    if (p_to_destroy->state != STATE_RUNNING)
-    {
-        queue_del(p_to_destroy, next);
-    }
-    else
-    {
-        running_process = NULL;
-    }
+    queue_del(p_to_destroy, next);
     if (p_to_destroy->parent != NULL)
     {
         queue_del(p_to_destroy, children.next);

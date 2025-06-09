@@ -38,7 +38,7 @@ int start_test(void *arg)
     {
         printf("\n################ Test %d ################\n", i);
         test_run(i);
-        printf("\n##############Fin Test %d ###############\n\n", i);
+        printf("\n############## Fin Test %d ###############\n\n", i);
     }
     return (int)arg;
 }

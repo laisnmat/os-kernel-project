@@ -5,22 +5,6 @@
 
 #include "../shared/stdlib.h"
 
-void clean_zombies_processes()
-{
-    if (queue_empty(&head_zombie)) return;
-
-    process *zombie = queue_entry(head_zombie.next, process, next);
-    while (&zombie->next != &head_zombie)
-    {
-        process *next_zombie = queue_entry(zombie->next.next, process, next);
-        if (zombie->parent == NULL)
-        {
-            destroy(zombie);
-        }
-        zombie = next_zombie;
-    }
-}
-
 void wakeup_processes()
 {
     process *p_sleep = queue_top(&head_sleeping, process, next);
@@ -35,7 +19,11 @@ void wakeup_processes()
 
 void schedule(void)
 {
-    clean_zombies_processes();
+    //si un processus s'est auto-tué, et qu'il n'est pas en train de run alors on le destroy
+    if (process_self_killed != NULL && process_self_killed != running_process) {
+        destroy(process_self_killed);
+        process_self_killed = NULL;
+    }
     wakeup_processes();
     process *next_process = queue_top(&head_ready, process, next);
     if (next_process == NULL || (running_process->state == STATE_RUNNING && next_process->prio <
@@ -46,11 +34,6 @@ void schedule(void)
     }
     process *current_p = running_process;
     next_process = queue_out(&head_ready, process, next);
-    if (running_process == NULL)
-    {
-        running_process = next_process;
-        ctx_sw(NULL, next_process->regs);
-    }
     if
     (current_p->state == STATE_RUNNING)
     {
