@@ -11,7 +11,8 @@
 #include "../shared/stdint.h"
 #include "../shared/queue.h"
 
-#define MAX_STACK_SIZE 0xFFFFFFFF
+#define MIN_STACK_SIZE 64
+#define MAX_STACK_SIZE 4096
 
 #define NUMBER_REGISTERS 5
 #define PROCESS_NAME_MAX 16

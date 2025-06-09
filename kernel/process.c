@@ -185,6 +185,7 @@ int waitpid(int pid, int *retvalp)
     {
         *retvalp = child_process->retval;
     }
+    pid = child_process->pid;
     destroy(child_process);
     return pid;
 }
@@ -192,7 +193,7 @@ int waitpid(int pid, int *retvalp)
 
 int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name, void *arg)
 {
-    ssize = MAX(ssize, 3);
+    ssize = MAX(ssize, MIN_STACK_SIZE);
     if (ssize >= MAX_STACK_SIZE)
     {
         return -1;
