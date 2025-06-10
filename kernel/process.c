@@ -1,14 +1,14 @@
 #include "process.h"
-#include "string.h"
-#include "mem.h"
 #include "../shared/queue.h"
+#include "mem.h"
+#include "string.h"
 process *process_array[NBPROC];
 process *running_process = NULL;
 process *process_self_killed = NULL;
 LIST_HEAD(head_ready);
 LIST_HEAD(head_sleeping);
 LIST_HEAD(head_zombie);
-#define MAX(x, y) (((x)>(y))?(x):(y))
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 void set_zombie(process *p)
 {
@@ -23,12 +23,15 @@ void set_zombie(process *p)
 
 void destroy(process *p_to_destroy)
 {
-    //cas où on s'auto-kill
-    if (p_to_destroy == running_process) {
-        // (On pourrait remonter la condition, mais la garder dans le if est plus optimal, elle est réévaluée dans le scheduler)
-        // S'il existait un processus qui s'était auto tué mais qu'on a pas eu le temps de traiter
-        if (process_self_killed != NULL) {
-            //alors on le tue (pour ensuite prendre sa place)
+    // cas où on s'auto-kill
+    if (p_to_destroy == running_process)
+    {
+        // (On pourrait remonter la condition, mais la garder dans le if est plus optimal, elle est
+        // réévaluée dans le scheduler) S'il existait un processus qui s'était auto tué mais qu'on a
+        // pas eu le temps de traiter
+        if (process_self_killed != NULL)
+        {
+            // alors on le tue (pour ensuite prendre sa place)
             destroy(process_self_killed);
         }
         set_zombie(p_to_destroy);
@@ -68,8 +71,8 @@ void destroy_children(process *parent)
 
 void terminate(process *p)
 {
-    if (p->parent != NULL && p->parent->state == STATE_WAIT_CHILD && (
-            p->parent->wait_pid == p->pid || p->parent->wait_pid < 0))
+    if (p->parent != NULL && p->parent->state == STATE_WAIT_CHILD &&
+        (p->parent->wait_pid == p->pid || p->parent->wait_pid < 0))
     {
         p->parent->state = STATE_READY;
         p->parent->wait_pid = p->pid;
@@ -98,6 +101,7 @@ void start_idle()
     strcpy(idle->name, name);
     idle->state = state;
     idle->prio = 1;
+    idle->fid_destroyed_or_reset = false;
     INIT_LIST_HEAD(&idle->children.head);
     idle->parent = NULL;
     running_process = idle;
@@ -115,8 +119,8 @@ void exit(int retval)
 int kill(int pid)
 {
     // verifier que le processus appelant est bien le parrent du proc à tuer
-    if (pid <= 0 || pid >= NBPROC || process_array[pid] == NULL || process_array[pid]->state ==
-        STATE_ZOMBIE)
+    if (pid <= 0 || pid >= NBPROC || process_array[pid] == NULL ||
+        process_array[pid]->state == STATE_ZOMBIE)
     {
         return -1; // Processus n'existe pas
     }
@@ -129,12 +133,12 @@ int kill(int pid)
 void process_wrapper(void)
 {
     /** Execution stack layout:
-    *  +----------------------+
-    *  |         arg          | ssize - 1
-    *  +----------------------+
-    *  *       pt_func        | ssize - 2
-    *  +----------------------+
-    **/
+     *  +----------------------+
+     *  |         arg          | ssize - 1
+     *  +----------------------+
+     *  *       pt_func        | ssize - 2
+     *  +----------------------+
+     **/
     unsigned long ssize = running_process->ssize;
     int (*pt_func)(void *) = (int (*)(void *))running_process->execution_stack[ssize - 2];
     void *arg = (void *)running_process->execution_stack[ssize - 1];
@@ -153,8 +157,8 @@ int waitpid(int pid, int *retvalp)
     if (wait_any_child)
     {
         // On vérifie qu'il y a pas un fils qui aurait déjà fini
-        process *next_child = queue_entry(running_process->children.head.next, process,
-                                          children.next);
+        process *next_child =
+            queue_entry(running_process->children.head.next, process, children.next);
         while (&next_child->children.next != &running_process->children.head)
         {
             if (next_child->state == STATE_ZOMBIE)
@@ -171,15 +175,15 @@ int waitpid(int pid, int *retvalp)
         }
     }
     /*
-      * Si pid invalide
-      * Si le processus n'est pas un fils
-    */
+     * Si pid invalide
+     * Si le processus n'est pas un fils
+     */
     if (pid >= NBPROC || (!wait_any_child && process_array[pid]->parent != running_process))
         return -1;
 
     running_process->wait_pid = pid;
-    //si on n'a pas d'enfant zombie en pid -1 / l'enfant qu'on attend n'est pas un zombie
-    //alors on attend qu'il fini
+    // si on n'a pas d'enfant zombie en pid -1 / l'enfant qu'on attend n'est pas un zombie
+    // alors on attend qu'il fini
     if (wait_any_child || process_array[pid]->state != STATE_ZOMBIE)
     {
         running_process->state = STATE_WAIT_CHILD;
@@ -194,7 +198,6 @@ int waitpid(int pid, int *retvalp)
     destroy(child_process);
     return pid;
 }
-
 
 int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name, void *arg)
 {
@@ -220,19 +223,20 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     current_p->ssize = ssize;
     current_p->execution_stack = mem_alloc(ssize * sizeof(int32_t));
     /** Execution stack layout:
-    *  +----------------------+
-    *  |         arg          | ssize - 1
-    *  +----------------------+
-    *  *      pt_func         | ssize - 2
-    *  +----------------------+
-    *  | call process_wrapper | ssize - 3
-    *  +----------------------+ <-- %esp
-    **/
+     *  +----------------------+
+     *  |         arg          | ssize - 1
+     *  +----------------------+
+     *  *      pt_func         | ssize - 2
+     *  +----------------------+
+     *  | call process_wrapper | ssize - 3
+     *  +----------------------+ <-- %esp
+     **/
     current_p->execution_stack[ssize - 1] = (int32_t)arg;
     current_p->execution_stack[ssize - 2] = (int32_t)pt_func;
     current_p->execution_stack[ssize - 3] = (int32_t)process_wrapper;
     current_p->regs[ESP] = (int32_t)&current_p->execution_stack[ssize - 3];
     current_p->prio = prio;
+    current_p->fid_destroyed_or_reset = false;
     INIT_LIST_HEAD(&current_p->children.head);
     current_p->parent = running_process;
     queue_push_head(current_p, &(current_p->parent->children.head), process, children.next);
@@ -254,8 +258,8 @@ int getprio(int pid)
 int chprio(int pid, int newprio)
 {
     // Processus n'existe pas ou priorité invalide
-    if (pid < 0 || pid >= NBPROC || process_array[pid] == NULL || newprio <= 0 || newprio > MAXPRIO
-        || process_array[pid]->state == STATE_ZOMBIE)
+    if (pid < 0 || pid >= NBPROC || process_array[pid] == NULL || newprio <= 0 ||
+        newprio > MAXPRIO || process_array[pid]->state == STATE_ZOMBIE)
     {
         return -1;
     }

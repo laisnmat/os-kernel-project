@@ -87,6 +87,7 @@ typedef struct process
     } children;
 
     int wait_pid;
+    bool fid_destroyed_or_reset;
 } process;
 
 
