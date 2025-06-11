@@ -2,15 +2,15 @@
 #include "../shared/queue.h"
 #include "mem.h"
 #include "string.h"
-process *process_array[NBPROC];
-process *running_process = NULL;
-process *process_self_killed = NULL;
+process_t *process_array[NBPROC];
+process_t *running_process = NULL;
+process_t *process_self_killed = NULL;
 LIST_HEAD(head_ready);
 LIST_HEAD(head_sleeping);
 LIST_HEAD(head_zombie);
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
-void set_zombie(process *p)
+void set_zombie(process_t *p)
 {
     State prev_state = p->state;
     p->state = STATE_ZOMBIE;
@@ -18,10 +18,10 @@ void set_zombie(process *p)
     {
         queue_del(p, next);
     }
-    queue_push_head(p, &head_zombie, process, next);
+    queue_push_head(p, &head_zombie, process_t, next);
 }
 
-void destroy(process *p_to_destroy)
+void destroy(process_t *p_to_destroy)
 {
     // cas où on s'auto-kill
     if (p_to_destroy == running_process)
@@ -45,16 +45,16 @@ void destroy(process *p_to_destroy)
     }
     int pid = p_to_destroy->pid;
     mem_free(p_to_destroy->execution_stack, p_to_destroy->ssize * sizeof(int32_t));
-    mem_free(p_to_destroy, sizeof(process));
+    mem_free(p_to_destroy, sizeof(process_t));
     process_array[pid] = NULL;
 }
 
-void destroy_children(process *parent)
+void destroy_children(process_t *parent)
 {
-    process *child = queue_entry(parent->children.head.next, process, children.next);
+    process_t *child = queue_entry(parent->children.head.next, process_t, children.next);
     while (&child->children.next != &parent->children.head)
     {
-        process *next_child = queue_entry(child->children.next.next, process, children.next);
+        process_t *next_child = queue_entry(child->children.next.next, process_t, children.next);
 
         if (child->parent != NULL)
         {
@@ -69,14 +69,14 @@ void destroy_children(process *parent)
     }
 }
 
-void terminate(process *p)
+void terminate(process_t *p)
 {
     if (p->parent != NULL && p->parent->state == STATE_WAIT_CHILD &&
         (p->parent->wait_pid == p->pid || p->parent->wait_pid < 0))
     {
         p->parent->state = STATE_READY;
         p->parent->wait_pid = p->pid;
-        queue_add(p->parent, &head_ready, process, next, prio);
+        queue_add(p->parent, &head_ready, process_t, next, prio);
     }
     destroy_children(p);
     if (p->parent == NULL)
@@ -95,8 +95,8 @@ void start_idle()
     const int32_t pid = 0;
     const char name[PROCESS_NAME_MAX] = "idle";
     const State state = STATE_RUNNING;
-    process_array[pid] = mem_alloc(sizeof(process));
-    process *idle = process_array[pid];
+    process_array[pid] = mem_alloc(sizeof(process_t));
+    process_t *idle = process_array[pid];
     idle->pid = pid;
     strcpy(idle->name, name);
     idle->state = state;
@@ -124,7 +124,7 @@ int kill(int pid)
     {
         return -1; // Processus n'existe pas
     }
-    process *target_process = process_array[pid];
+    process_t *target_process = process_array[pid];
     target_process->retval = 0;
     terminate(target_process);
     return 0;
@@ -157,8 +157,8 @@ int waitpid(int pid, int *retvalp)
     if (wait_any_child)
     {
         // On vérifie qu'il y a pas un fils qui aurait déjà fini
-        process *next_child =
-            queue_entry(running_process->children.head.next, process, children.next);
+        process_t *next_child =
+            queue_entry(running_process->children.head.next, process_t, children.next);
         while (&next_child->children.next != &running_process->children.head)
         {
             if (next_child->state == STATE_ZOMBIE)
@@ -171,7 +171,7 @@ int waitpid(int pid, int *retvalp)
                 destroy(next_child);
                 return child_pid;
             }
-            next_child = queue_entry(next_child->children.next.next, process, children.next);
+            next_child = queue_entry(next_child->children.next.next, process_t, children.next);
         }
     }
     /*
@@ -189,7 +189,7 @@ int waitpid(int pid, int *retvalp)
         running_process->state = STATE_WAIT_CHILD;
         schedule();
     }
-    process *child_process = process_array[running_process->wait_pid];
+    process_t *child_process = process_array[running_process->wait_pid];
     if (retvalp != NULL)
     {
         *retvalp = child_process->retval;
@@ -215,8 +215,8 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     {
         return -1;
     }
-    process_array[pid] = mem_alloc(sizeof(process));
-    process *current_p = process_array[pid];
+    process_array[pid] = mem_alloc(sizeof(process_t));
+    process_t *current_p = process_array[pid];
     current_p->pid = pid;
     strcpy(current_p->name, name);
     current_p->state = STATE_READY;
@@ -239,8 +239,8 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     current_p->fid_destroyed_or_reset = false;
     INIT_LIST_HEAD(&current_p->children.head);
     current_p->parent = running_process;
-    queue_push_head(current_p, &(current_p->parent->children.head), process, children.next);
-    queue_add(current_p, &head_ready, process, next, prio);
+    queue_push_head(current_p, &(current_p->parent->children.head), process_t, children.next);
+    queue_add(current_p, &head_ready, process_t, next, prio);
     schedule();
     return pid;
 }
@@ -263,14 +263,19 @@ int chprio(int pid, int newprio)
     {
         return -1;
     }
-    process *p = process_array[pid];
+    process_t *p = process_array[pid];
     int oldprio = p->prio;
     p->prio = newprio;
     // Repositionner le processus dans la file d'attente si nécessaire
     if (p->state == STATE_READY)
     {
         queue_del(p, next);
-        queue_add(p, &head_ready, process, next, prio);
+        queue_add(p, &head_ready, process_t, next, prio);
+    }
+    else if (p->state == STATE_BLOCKED_MSG)
+    {
+        queue_del(p, next);
+        queue_add(p, p->head_waiting_queue, process_t, next, prio);
     }
     schedule();
     return oldprio;
@@ -283,9 +288,9 @@ int getpid(void)
 
 void wait_clock(unsigned long clock)
 {
-    process *current_p = running_process;
+    process_t *current_p = running_process;
     current_p->state = STATE_SLEEPING;
     current_p->wakeup_time = clock + current_clock();
-    queue_add_by_time(current_p, &head_sleeping, process, next, wakeup_time);
+    queue_add_by_time(current_p, &head_sleeping, process_t, next, wakeup_time);
     schedule();
 }

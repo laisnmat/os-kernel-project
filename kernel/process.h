@@ -66,7 +66,7 @@ typedef enum State
 } State;
 
 
-typedef struct process
+typedef struct process_t
 {
     int32_t pid;
     int16_t prio;
@@ -78,7 +78,7 @@ typedef struct process
     link next;
     unsigned long wakeup_time;
     int retval;
-    struct process *parent;
+    struct process_t *parent;
 
     struct
     {
@@ -88,14 +88,15 @@ typedef struct process
 
     int wait_pid;
     bool fid_destroyed_or_reset;
-} process;
+    link *head_waiting_queue; // Pointeur vers la file d'attente du processus
+} process_t;
 
 
-void destroy(process *p_to_destroy);
-extern process *process_array[NBPROC];
+void destroy(process_t *p_to_destroy);
+extern process_t *process_array[NBPROC];
 extern void ctx_sw(int32_t *prev_regs, int32_t *next_regs);
-extern process *running_process;
-extern process *process_self_killed;
+extern process_t *running_process;
+extern process_t *process_self_killed;
 extern link head_ready;
 extern link head_sleeping;
 extern link head_zombie;

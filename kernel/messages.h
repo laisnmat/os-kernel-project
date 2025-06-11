@@ -7,12 +7,12 @@
 
 extern int NB_QUEUE;
 
-typedef struct message
+typedef struct message_t
 {
     unsigned int fid;
     int message;
     link next;
-} message;
+} message_t;
 
 
 /**

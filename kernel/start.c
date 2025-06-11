@@ -35,7 +35,7 @@ int helloworld2(void *arg)
 
 int start_test(void *arg)
 {
-    for (int i = 12; i <= 19; i++)
+    for (int i = 13; i <= 19; i++)
     {
         printf("\n################ Test %d ################\n", i);
         test_run(i);

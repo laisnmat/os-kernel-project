@@ -6,7 +6,7 @@
 #include "stdbool.h"
 
 
-typedef struct msg_queue
+typedef struct msg_queue_t
 {
     link head;                    // Queue to hold messages
     unsigned int capacity;        // Maximum number of messages in the queue
@@ -16,30 +16,30 @@ typedef struct msg_queue
     link writers_queue;      // Queue to hold processes waiting to send messages
     unsigned int writers_count; // Number of processes waiting to receive messages
     unsigned int readers_count;    // Number of processes waiting to send messages
-} msg_queue;
+} msg_queue_t;
 
-extern msg_queue* msg_queue_array[MAX_NB_QUEUE];
+extern msg_queue_t* msg_queue_array[MAX_NB_QUEUE];
 
 void init_msg_queue_array();
 
-msg_queue* init_msg_queue(unsigned int fid ,unsigned int capacity);
+msg_queue_t* init_msg_queue(unsigned int fid ,unsigned int capacity);
 
-int add_msg_queue(msg_queue* queue, int message);
+int add_msg_queue(msg_queue_t* queue, int message);
 
-message *pop_msg_queue(msg_queue* queue);
+message_t *pop_msg_queue(msg_queue_t* queue);
 
-message *peek_msg_queue(msg_queue* queue);
+message_t *peek_msg_queue(msg_queue_t* queue);
 
-void reset_queue(msg_queue* queue);
+void reset_queue(msg_queue_t* queue);
 
-void destroy_msg_queue(msg_queue* queue);
+void destroy_msg_queue(msg_queue_t* queue);
 
-bool is_full(const msg_queue* queue);
+bool is_full(const msg_queue_t* queue);
 
-bool is_empty(const msg_queue* queue);
+bool is_empty(const msg_queue_t* queue);
 
-bool readers_empty(const msg_queue* queue);
+bool readers_empty(const msg_queue_t* queue);
 
-bool writers_empty(const msg_queue* queue);
+bool writers_empty(const msg_queue_t* queue);
 
 #endif //MSG_QUEUE_H
