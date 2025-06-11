@@ -9,7 +9,7 @@ bool is_valid_fid(int fid)
 
 int pcreate(int count)
 {
-    if (NB_QUEUE >= MAX_NB_QUEUE || count <= 0)
+    if (NB_QUEUE >= MAX_NB_QUEUE || count <= 0 || count >= 1073741827)
         return -1;
 
     int fid = 0;
@@ -51,17 +51,14 @@ int preceive(int fid, int *msg)
         queue_add(running_process, &queue->readers_queue, process_t, next, prio);
         running_process->head_waiting_queue = &queue->readers_queue;
         queue->readers_count++;
-        //schedule();
-        if (!writers_empty(queue))
+        schedule();
+        if (running_process->fid_destroyed_or_reset)
         {
-            queue->writers_count--;
-            process_t *next_process = queue_out(&queue->writers_queue, process_t, next);
-            next_process->state = STATE_RUNNING;
-            ctx_sw(running_process->regs, next_process->regs);
-        } else
-        {
-            schedule();
+            running_process->fid_destroyed_or_reset = false;
+            return -2;
         }
+        *msg = running_process->buffered_msg;
+        return 0;
     }
 
     if (running_process->fid_destroyed_or_reset)
@@ -77,6 +74,7 @@ int preceive(int fid, int *msg)
     if (!writers_empty(queue))
     {
         process_t *writer = queue_out(&queue->writers_queue, process_t, next);
+        add_msg_queue(queue, writer->buffered_msg);
         writer->state = STATE_READY;
         queue_add(writer, &head_ready, process_t, next, prio);
         queue->writers_count--;
@@ -97,20 +95,15 @@ int psend(int fid, int msg)
     if (is_full(queue))
     {
         running_process->state = STATE_BLOCKED_MSG;
+        running_process->buffered_msg=msg;
         queue_add(running_process, &queue->writers_queue, process_t, next, prio);
         running_process->head_waiting_queue = &queue->writers_queue;
         queue->writers_count++;
-        //schedule();
-        if (!readers_empty(queue))
-        {
-            queue->readers_count--;
-            process_t *next_process = queue_out(&queue->readers_queue, process_t, next);
-            next_process->state = STATE_RUNNING;
-            ctx_sw(running_process->regs, next_process->regs);
-        } else
-        {
-            schedule();
-        }
+
+        schedule();
+        int ret = running_process->fid_destroyed_or_reset ? -2 : 0;
+        running_process->fid_destroyed_or_reset = false;
+        return ret;
     }
 
     if (running_process->fid_destroyed_or_reset)
@@ -119,16 +112,20 @@ int psend(int fid, int msg)
         return -2;
     }
 
-    add_msg_queue(queue, msg);
 
-    if (!readers_empty(queue))
+
+    if (is_empty(queue) && !readers_empty(queue))
     {
         process_t *reader = queue_out(&queue->readers_queue, process_t, next);
         reader->state = STATE_READY;
+        reader->buffered_msg=msg;
         queue_add(reader, &head_ready, process_t, next, prio);
         queue->readers_count--;
         schedule();
+        return 0;
     }
+
+    add_msg_queue(queue, msg);
 
     return 0;
 }

@@ -1,7 +1,7 @@
 #include "msg_queue.h"
 #include "process.h"
 
-int NB_QUEUE;
+unsigned int NB_QUEUE;
 msg_queue_t* msg_queue_array[MAX_NB_QUEUE];
 
 void init_msg_queue_array()
@@ -23,6 +23,7 @@ msg_queue_t* init_msg_queue(unsigned int fid, unsigned int capacity)
     queue->count = 0;
     queue->writers_count = 0;
     queue->readers_count = 0;
+    NB_QUEUE++;
     return queue;
 }
 
@@ -69,7 +70,6 @@ void empty_queue(link* head)
     }
 }
 
-
 void clean_msg_queue(msg_queue_t* queue)
 {
     while (!is_empty(queue))
@@ -81,12 +81,12 @@ void clean_msg_queue(msg_queue_t* queue)
 
 void reset_queue(msg_queue_t* queue)
 {
-    queue->count = 0;
     queue->writers_count = 0;
     queue->readers_count = 0;
     empty_queue(&queue->readers_queue);
     empty_queue(&queue->writers_queue);
     clean_msg_queue(queue);
+    queue->count = 0;
 }
 
 void destroy_msg_queue(msg_queue_t* queue)
@@ -107,12 +107,12 @@ bool is_empty(const msg_queue_t* queue)
     return queue->count == 0;
 }
 
-bool readers_empty(const msg_queue_t* queue)
+bool readers_empty(msg_queue_t* queue)
 {
-    return queue->readers_count == 0;
+    return queue_empty(&(queue->readers_queue));
 }
 
-bool writers_empty(const msg_queue_t* queue)
+bool writers_empty(msg_queue_t* queue)
 {
-    return queue->writers_count == 0;
+    return queue_empty(&(queue->writers_queue));
 }

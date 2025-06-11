@@ -38,8 +38,8 @@ bool is_full(const msg_queue_t* queue);
 
 bool is_empty(const msg_queue_t* queue);
 
-bool readers_empty(const msg_queue_t* queue);
+bool readers_empty(msg_queue_t* queue);
 
-bool writers_empty(const msg_queue_t* queue);
+bool writers_empty(msg_queue_t* queue);
 
 #endif //MSG_QUEUE_H

@@ -201,11 +201,12 @@ int waitpid(int pid, int *retvalp)
 
 int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name, void *arg)
 {
-    ssize = MAX(ssize, MIN_STACK_SIZE);
-    if (ssize >= MAX_STACK_SIZE)
+    if (ssize >= MAX_STACK_SIZE - REQUIRED_STACK_SIZE)
     {
         return -1;
     }
+    ssize = MAX(ssize, REQUIRED_STACK_SIZE);
+
     uint32_t pid = 0;
     while (pid < NBPROC && process_array[pid] != NULL)
     {

@@ -33,12 +33,17 @@ int helloworld2(void *arg)
     return (int)arg;
 }
 
+int __test_run(void *arg)
+{
+    return test_run((int)arg);
+}
+
 int start_test(void *arg)
 {
-    for (int i = 13; i <= 19; i++)
+    for (int i = 12; i <= 19; i++)
     {
         printf("\n################ Test %d ################\n", i);
-        test_run(i);
+        start(__test_run, 4000, 128, "test" + i, (void *)(i));
         printf("\n############## Fin Test %d ###############\n\n", i);
     }
     return (int)arg;
@@ -64,7 +69,7 @@ void kernel_start(void)
     masque_IRQ(0, 0);
     init_msg_queue_array();
     start_idle();
-    start(start_test, 256, 128, "StartTest", NULL);
+    start(start_test, 4000, 10, "StartTest", NULL);
     idle();
     while (1)
         hlt();

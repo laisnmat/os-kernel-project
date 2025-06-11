@@ -5,7 +5,7 @@
 
 #define MAX_NB_QUEUE 10
 
-extern int NB_QUEUE;
+extern unsigned int NB_QUEUE;
 
 typedef struct message_t
 {

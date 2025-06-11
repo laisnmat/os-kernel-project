@@ -11,12 +11,12 @@
 #include "../shared/stdint.h"
 #include "../shared/queue.h"
 
-#define MIN_STACK_SIZE 64
-#define MAX_STACK_SIZE 4096
+#define REQUIRED_STACK_SIZE 64
+#define MAX_STACK_SIZE 0xFFFFFFFF
 
 #define NUMBER_REGISTERS 5
 #define PROCESS_NAME_MAX 16
-#define NBPROC 8
+#define NBPROC 512
 #define EBX 0
 #define ESP 1
 #define EBP 2
@@ -89,6 +89,7 @@ typedef struct process_t
     int wait_pid;
     bool fid_destroyed_or_reset;
     link *head_waiting_queue; // Pointeur vers la file d'attente du processus
+    int buffered_msg;
 } process_t;
 
 
