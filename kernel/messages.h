@@ -7,13 +7,6 @@
 
 extern unsigned int NB_QUEUE;
 
-typedef struct message_t
-{
-    unsigned int fid;
-    int message;
-    link next;
-} message_t;
-
 
 /**
  * @brief Obtention d'information sur une file de messages

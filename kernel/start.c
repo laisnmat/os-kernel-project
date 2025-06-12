@@ -36,7 +36,13 @@ int helloworld2(void *arg)
 
 int start_test(void *arg)
 {
-    for (int i = 10; i <= 19; i++)
+    for (int i = 1; i <= 10; i++)
+    {
+        printf("\n################ Test %d ################\n", i);
+        test_run(i);
+        printf("\n############## Fin Test %d ###############\n\n", i);
+    }
+    for (int i = 12; i <= 19; i++)
     {
         printf("\n################ Test %d ################\n", i);
         test_run(i);

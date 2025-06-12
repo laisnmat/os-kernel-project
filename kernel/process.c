@@ -217,12 +217,16 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
         return -1;
     }
     process_array[pid] = mem_alloc(sizeof(process_t));
+    // Vérifie que le mem_alloc ne plante pas
+    if (process_array[pid] == NULL) return -1;
     process_t *current_p = process_array[pid];
     current_p->pid = pid;
     strcpy(current_p->name, name);
     current_p->state = STATE_READY;
     current_p->ssize = ssize;
     current_p->execution_stack = mem_alloc(ssize * sizeof(int32_t));
+    // Vérifie que le mem_alloc ne plante pas
+    if (current_p->execution_stack == NULL) return -1;
     /** Execution stack layout:
      *  +----------------------+
      *  |         arg          | ssize - 1

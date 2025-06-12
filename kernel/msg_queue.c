@@ -15,12 +15,18 @@ void init_msg_queue_array()
 msg_queue_t* init_msg_queue(unsigned int fid, unsigned int capacity)
 {
     msg_queue_t* queue = mem_alloc(sizeof(msg_queue_t));
-    INIT_LIST_HEAD(&queue->head);
+    // Vérifie que le mem_alloc ne plante pas
+    if (queue == NULL) return NULL;
+    queue->messages = mem_alloc(capacity * sizeof(int));
+    // Vérifie que le mem_alloc ne plante pas
+    if (queue->messages == NULL) return NULL;
     INIT_LIST_HEAD(&queue->readers_queue);
     INIT_LIST_HEAD(&queue->writers_queue);
     queue->capacity = capacity;
     queue->fid = fid;
     queue->count = 0;
+    queue->write_position = 0;
+    queue->read_position = 0;
     queue->writers_count = 0;
     queue->readers_count = 0;
     NB_QUEUE++;
@@ -33,28 +39,18 @@ int add_msg_queue(msg_queue_t* queue, int msg)
         return -1;
 
     queue->count++;
-    message_t* m = mem_alloc(sizeof(message_t));
-    m->message = msg;
-    m->fid = queue->fid;
-    queue_add(m, &queue->head, message_t, next, fid);
+    queue->messages[queue->write_position++] = msg;
+    queue->write_position %= queue->capacity;
+
     return queue->count;
 }
 
-message_t *pop_msg_queue(msg_queue_t* queue)
+int pop_msg_queue(msg_queue_t* queue)
 {
-    if (queue->count == 0)
-        return NULL; // Queue is empty
-
     queue->count--;
-    return queue_out(&queue->head, message_t, next);
-}
-
-message_t *peek_msg_queue(msg_queue_t* queue)
-{
-    if (queue->count == 0)
-        return NULL; // Queue is empty
-
-    return queue_top(&queue->head, message_t, next);
+    const int msg = queue->messages[queue->read_position++];
+    queue->read_position %= queue->capacity;
+    return msg;
 }
 
 void empty_queue(link* head)
@@ -72,11 +68,13 @@ void empty_queue(link* head)
 
 void clean_msg_queue(msg_queue_t* queue)
 {
-    while (!is_empty(queue))
+    for (unsigned int i = 0; i < queue->capacity; i++)
     {
-        message_t *m = pop_msg_queue(queue);
-        mem_free(m, sizeof(message_t));
+        queue->messages[i] = 0; // Reset messages to 0
     }
+    queue->write_position = 0;
+    queue->read_position = 0;
+    queue->count = 0;
 }
 
 void reset_queue(msg_queue_t* queue)
@@ -86,13 +84,13 @@ void reset_queue(msg_queue_t* queue)
     empty_queue(&queue->readers_queue);
     empty_queue(&queue->writers_queue);
     clean_msg_queue(queue);
-    queue->count = 0;
 }
 
 void destroy_msg_queue(msg_queue_t* queue)
 {
     reset_queue(queue);
     msg_queue_array[queue->fid] = NULL;
+    mem_free(queue->messages, queue->capacity * sizeof(int));
     mem_free(queue, sizeof(msg_queue_t));
     NB_QUEUE--;
 }

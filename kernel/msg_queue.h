@@ -8,9 +8,11 @@
 
 typedef struct msg_queue_t
 {
-    link head;                    // Queue to hold messages
+    int* messages;                     // Queue to hold messages
     unsigned int capacity;        // Maximum number of messages in the queue
     unsigned int count;           // Current number of messages in the queue
+    unsigned int write_position;
+    unsigned int read_position;
     unsigned int fid;             // Unique identifier for the message queue
     link readers_queue;      // Queue to hold processes waiting to receive messages
     link writers_queue;      // Queue to hold processes waiting to send messages
@@ -26,9 +28,7 @@ msg_queue_t* init_msg_queue(unsigned int fid ,unsigned int capacity);
 
 int add_msg_queue(msg_queue_t* queue, int message);
 
-message_t *pop_msg_queue(msg_queue_t* queue);
-
-message_t *peek_msg_queue(msg_queue_t* queue);
+int pop_msg_queue(msg_queue_t* queue);
 
 void reset_queue(msg_queue_t* queue);
 

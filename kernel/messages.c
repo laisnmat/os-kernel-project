@@ -17,7 +17,12 @@ int pcreate(int count)
     while (fid < MAX_NB_QUEUE && msg_queue_array[fid] != NULL)
         fid++;
 
-    msg_queue_array[fid] = init_msg_queue(fid, count);
+    msg_queue_t* queue = init_msg_queue(fid, count);
+    if (queue == NULL)
+    {
+        return -1;
+    }
+    msg_queue_array[fid] = queue;
     return fid;
 }
 
@@ -67,8 +72,7 @@ int preceive(int fid, int *msg)
         return -2;
     }
 
-    message_t *m = pop_msg_queue(queue);
-    *msg = m->message;
+    *msg  = pop_msg_queue(queue);
 
     //ne pas lâcher dans la nature les processus
     if (!writers_empty(queue))
