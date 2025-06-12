@@ -11,12 +11,12 @@
 #include "../shared/stdint.h"
 #include "../shared/queue.h"
 
-#define MIN_STACK_SIZE 64
-#define MAX_STACK_SIZE 4096
+#define REQUIRED_STACK_SIZE 64
+#define MAX_STACK_SIZE 0xFFFFFFFF
 
 #define NUMBER_REGISTERS 5
-#define PROCESS_NAME_MAX 16
-#define NBPROC 8
+#define PROCESS_NAME_MAX 64
+#define NBPROC 512
 #define EBX 0
 #define ESP 1
 #define EBP 2
@@ -66,7 +66,7 @@ typedef enum State
 } State;
 
 
-typedef struct process
+typedef struct process_t
 {
     int32_t pid;
     int16_t prio;
@@ -78,7 +78,7 @@ typedef struct process
     link next;
     unsigned long wakeup_time;
     int retval;
-    struct process *parent;
+    struct process_t *parent;
 
     struct
     {
@@ -87,14 +87,17 @@ typedef struct process
     } children;
 
     int wait_pid;
-} process;
+    bool fid_destroyed_or_reset;
+    link *head_waiting_queue; // Pointeur vers la file d'attente du processus
+    int buffered_msg;
+} process_t;
 
 
-void destroy(process *p_to_destroy);
-extern process *process_array[NBPROC];
+void destroy(process_t *p_to_destroy);
+extern process_t *process_array[NBPROC];
 extern void ctx_sw(int32_t *prev_regs, int32_t *next_regs);
-extern process *running_process;
-extern process *process_self_killed;
+extern process_t *running_process;
+extern process_t *process_self_killed;
 extern link head_ready;
 extern link head_sleeping;
 extern link head_zombie;
