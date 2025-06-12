@@ -4,7 +4,7 @@
 
 bool is_valid_fid(int fid)
 {
-    return (fid >= 0 && fid < MAX_NB_QUEUE &&  msg_queue_array[fid] != NULL);
+    return (fid >= 0 && fid < MAX_NB_QUEUE && msg_queue_array[fid] != NULL);
 }
 
 int pcreate(int count)
@@ -17,7 +17,7 @@ int pcreate(int count)
     while (fid < MAX_NB_QUEUE && msg_queue_array[fid] != NULL)
         fid++;
 
-    msg_queue_t* queue = init_msg_queue(fid, count);
+    msg_queue_t *queue = init_msg_queue(fid, count);
     if (queue == NULL)
     {
         return -1;
@@ -33,7 +33,7 @@ int pcount(int fid, int *count)
 
     if (count != NULL)
     {
-        msg_queue_t * queue = msg_queue_array[fid];
+        msg_queue_t *queue = msg_queue_array[fid];
         if (is_empty(queue))
             *count = -queue->readers_count;
         else
@@ -77,9 +77,10 @@ int preceive(int fid, int *msg)
     }
     if (msg == NULL)
     {
+        pop_msg_queue(queue);
         return 0;
     }
-    *msg  = pop_msg_queue(queue);
+    *msg = pop_msg_queue(queue);
 
     //ne pas lâcher dans la nature les processus
     if (!writers_empty(queue))
@@ -106,7 +107,7 @@ int psend(int fid, int msg)
     if (is_full(queue))
     {
         running_process->state = STATE_BLOCKED_MSG;
-        running_process->buffered_msg=msg;
+        running_process->buffered_msg = msg;
         queue_add(running_process, &queue->writers_queue, process_t, next, prio);
         running_process->head_waiting_queue = &queue->writers_queue;
         queue->writers_count++;
@@ -123,13 +124,11 @@ int psend(int fid, int msg)
         return -2;
     }
 
-
-
     if (is_empty(queue) && !readers_empty(queue))
     {
         process_t *reader = queue_out(&queue->readers_queue, process_t, next);
         reader->state = STATE_READY;
-        reader->buffered_msg=msg;
+        reader->buffered_msg = msg;
         queue_add(reader, &head_ready, process_t, next, prio);
         queue->readers_count--;
         schedule();
