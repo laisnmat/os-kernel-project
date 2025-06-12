@@ -49,8 +49,8 @@ void clock_settings(unsigned long *quartz, unsigned long *ticks)
     *quartz = QUARTZ;
     *ticks = QUARTZ / CLOCKFREQ;
     outb(0x34, 0x43);
-    outb((QUARTZ / CLOCKFREQ) % 256, 0x40);
-    outb((QUARTZ / CLOCKFREQ) / 256, 0x40);
+    outb(*ticks, 0x40);
+    outb(*ticks / 256, 0x40);
 }
 
 unsigned long current_clock()

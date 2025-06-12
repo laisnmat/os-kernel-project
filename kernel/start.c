@@ -2,8 +2,10 @@
 #include "display.h"
 #include "clock.h"
 #include "process.h"
+#include "msg_queue.h"
 
-int test_run(int n);
+int
+test_run(int n);
 
 int helloworld1(void *arg)
 {
@@ -32,13 +34,14 @@ int helloworld2(void *arg)
     return (int)arg;
 }
 
+
 int start_test(void *arg)
 {
-    for (int i = 1; i <= 19; i++)
+    for (int i = 1; i <= 20; i++)
     {
-        printf("\n################ Test %d ################\n", i);
+        printf("\n############## TEST %d ##############\n \n", i);
         test_run(i);
-        printf("\n############## Fin Test %d ###############\n\n", i);
+        printf("\n############## FIN TEST %d ##############\n", i);
     }
     return (int)arg;
 }
@@ -61,8 +64,9 @@ void kernel_start(void)
     clock_settings(&quartz, &ticks);
     init_traitant_IT(32, traitant_IT_32);
     masque_IRQ(0, 0);
+    init_msg_queue_array();
     start_idle();
-    start(start_test, 256, 128, "StartTest", NULL);
+    start(start_test, 4000, 128, "StartTest", NULL);
     idle();
     while (1)
         hlt();
