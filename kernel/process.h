@@ -15,7 +15,7 @@
 #define MAX_STACK_SIZE 0xFFFFFFFF
 
 #define NUMBER_REGISTERS 5
-#define PROCESS_NAME_MAX 16
+#define PROCESS_NAME_MAX 64
 #define NBPROC 512
 #define EBX 0
 #define ESP 1
