@@ -289,9 +289,13 @@ int getpid(void)
 
 void wait_clock(unsigned long clock)
 {
+    if (clock <= current_clock())
+    {
+        return;
+    }
     process_t *current_p = running_process;
     current_p->state = STATE_SLEEPING;
-    current_p->wakeup_time = clock + current_clock();
+    current_p->wakeup_time = clock;
     queue_add_by_time(current_p, &head_sleeping, process_t, next, wakeup_time);
     schedule();
 }
