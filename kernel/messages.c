@@ -62,6 +62,10 @@ int preceive(int fid, int *msg)
             running_process->fid_destroyed_or_reset = false;
             return -2;
         }
+        if (msg == NULL)
+        {
+            return 0;
+        }
         *msg = running_process->buffered_msg;
         return 0;
     }
@@ -71,7 +75,10 @@ int preceive(int fid, int *msg)
         running_process->fid_destroyed_or_reset = false;
         return -2;
     }
-
+    if (msg == NULL)
+    {
+        return 0;
+    }
     *msg  = pop_msg_queue(queue);
 
     //ne pas lâcher dans la nature les processus

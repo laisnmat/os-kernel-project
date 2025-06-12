@@ -4,7 +4,7 @@
 #include "process.h"
 #include "msg_queue.h"
 
-int test_run(int n);
+void  auto_test(void);
 
 int helloworld1(void *arg)
 {
@@ -36,18 +36,7 @@ int helloworld2(void *arg)
 
 int start_test(void *arg)
 {
-    for (int i = 1; i <= 10; i++)
-    {
-        printf("\n################ Test %d ################\n", i);
-        test_run(i);
-        printf("\n############## Fin Test %d ###############\n\n", i);
-    }
-    for (int i = 12; i <= 19; i++)
-    {
-        printf("\n################ Test %d ################\n", i);
-        test_run(i);
-        printf("\n############## Fin Test %d ###############\n\n", i);
-    }
+    auto_test();
     return (int)arg;
 }
 
