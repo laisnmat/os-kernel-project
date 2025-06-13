@@ -1,11 +1,10 @@
+#include "clock.h"
 #include "debugger.h"
 #include "display.h"
-#include "clock.h"
-#include "process.h"
 #include "msg_queue.h"
+#include "process.h"
 
-int
-test_run(int n);
+int test_run(int n);
 
 int helloworld1(void *arg)
 {
@@ -33,7 +32,6 @@ int helloworld2(void *arg)
     printf("Hello world 2 : Je me suis réveillé\n");
     return (int)arg;
 }
-
 
 int start_test(void *arg)
 {
@@ -63,10 +61,11 @@ void kernel_start(void)
     unsigned long quartz, ticks;
     clock_settings(&quartz, &ticks);
     init_traitant_IT(32, traitant_IT_32);
+    init_traitant_IT(0x49, traitant_IT_49); // handler pour les appels système
     masque_IRQ(0, 0);
     init_msg_queue_array();
     start_idle();
-    start(start_test, 4000, 128, "StartTest", NULL);
+    start((int (*)(void *))0x1000000, 4000, 128, "User Proc", NULL);
     idle();
     while (1)
         hlt();
