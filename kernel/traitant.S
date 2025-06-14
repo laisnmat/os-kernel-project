@@ -5,13 +5,21 @@
 traitant_IT_32:
 # sauvegarde des registres importants
     pushl %eax
-    pushl %edx
     pushl %ecx
+    pushl %edx
+    pushl %ebx
+    pushl %esi
+    pushl %edi
+    pushl %ebp
 # appel a la fonction C realisant le traitant
     call tic_PIT
 # restauration des registres importants
-    popl %ecx
+    popl %ebp
+    popl %edi
+    popl %esi
+    popl %ebx
     popl %edx
+    popl %ecx
     popl %eax
 # fin du traitant
     iret

@@ -23,6 +23,6 @@ void traite_car(char c);
 
 void defilement(void);
 
-void cons_write(const char *str, long size);
+void cons_write(const char *str, unsigned long size);
 
 #endif //PSYS_BASE_DISPLAY_H

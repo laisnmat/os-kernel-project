@@ -23,6 +23,7 @@
 #define ESI 3
 #define EDI 4
 #define MAXPRIO 256
+#define TSS_ESP0 0x20004
 
 #define queue_add_by_time(ptr_elem, head, type, listfield, wakeuptime) \
     do {                                                               \
@@ -74,6 +75,7 @@ typedef struct process_t
     State state;
     int32_t regs[NUMBER_REGISTERS];
     int32_t *execution_stack;
+    int32_t *user_stack;
     unsigned long ssize;
     link next;
     unsigned long wakeup_time;

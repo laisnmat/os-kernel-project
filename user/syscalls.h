@@ -2,7 +2,8 @@
 #define SYSCALLS_H
 
 void exit(int retval);
-int cons_write(const char *str, size_t len);
+void return_exit(int retval);
+int cons_write(const char *str, unsigned long len);
 int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name, void *arg);
 int waitpid(int pid, int *retvalp);
 int kill(int pid);

@@ -1,4 +1,5 @@
 .global exit
+.global return_exit
 .global cons_write
 .global start
 .global waitpid
@@ -17,6 +18,12 @@
 exit:
     movl $1, %eax
     movl 4(%esp), %ebx
+    int $0x49
+    ret
+    
+return_exit:
+    movl %eax, %ebx
+    movl $1, %eax
     int $0x49
     ret
 

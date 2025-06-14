@@ -60,8 +60,8 @@ void kernel_start(void)
 
     unsigned long quartz, ticks;
     clock_settings(&quartz, &ticks);
-    init_traitant_IT(32, traitant_IT_32);
-    init_traitant_IT(0x49, traitant_IT_49); // handler pour les appels système
+    init_traitant_IT(32, traitant_IT_32, 0);
+    init_traitant_IT(0x49, traitant_IT_49, 3); // handler pour les appels système
     masque_IRQ(0, 0);
     init_msg_queue_array();
     start_idle();

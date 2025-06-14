@@ -15,7 +15,7 @@ void tic_PIT(void);
 
 void display_char_top_right(char *chaine);
 
-void init_traitant_IT(unsigned long num_IT, void (*traitant)(void));
+void init_traitant_IT(unsigned long num_IT, void (*traitant)(void), int dpl);
 
 void masque_IRQ(unsigned long num_IRQ, bool masque);
 

@@ -25,13 +25,14 @@ void tic_PIT(void)
     schedule();
 }
 
-void init_traitant_IT(unsigned long num_IT, void (*traitant)(void))
+void init_traitant_IT(unsigned long num_IT, void (*traitant)(void), int dpl)
 {
     unsigned long addr = (unsigned long)traitant;
+    uint8_t type_attr = 0x8E | (dpl << 5);
     idt[num_IT] = ((uint64_t)(addr & 0xFFFF))
-                  | ((uint64_t)KERNEL_CS << 16)
-                  | ((uint64_t)0x8E00 << 32)
-                  | ((uint64_t)(addr >> 16) << 48);
+                | ((uint64_t)KERNEL_CS << 16)
+                | ((uint64_t)type_attr << 40)
+                | ((uint64_t)(addr >> 16) << 48);
 }
 
 void masque_IRQ(unsigned long num_IRQ, bool masque)
