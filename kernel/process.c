@@ -229,7 +229,7 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     current_p->user_stack = user_stack_alloc(ssize * sizeof(int32_t));
     if (current_p->user_stack == NULL) return -1;
     current_p->user_stack[ssize - 1] = (int32_t)arg;
-    current_p->user_stack[ssize - 2] = 0x1000031; //Adresse fixe du return_exit présent dans syscalls.h
+    current_p->user_stack[ssize - 2] = 0x100003b; //Adresse fixe du return_exit présent dans syscalls.h
     //current_p->user_stack[ssize - 3] = (int32_t)pt_func;
     current_p->execution_stack = mem_alloc(ssize * sizeof(int32_t));
     // Vérifie que le mem_alloc ne plante pas

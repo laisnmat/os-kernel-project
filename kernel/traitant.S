@@ -4,6 +4,21 @@
 # debut du traitant
 traitant_IT_32:
 # sauvegarde des registres importants
+
+    # Met les segments en mode noyau (0x18 = index 3, ring 0, GDT)
+    
+    pushf
+    pushw %ds
+    pushw %es
+    pushw %fs
+    pushw %gs
+    
+    movw $0x18, %ax
+    movw %ax, %ds
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %gs
+    
     pushl %eax
     pushl %ecx
     pushl %edx
@@ -21,23 +36,53 @@ traitant_IT_32:
     popl %edx
     popl %ecx
     popl %eax
+    
+    popw %gs
+    popw %fs
+    popw %es
+    popw %ds
+    popf
+    
 # fin du traitant
     iret
 
 traitant_IT_49:
-    subl $24, %esp
-
-    movl %eax, 0(%esp)   # eax
-    movl %ebx, 4(%esp)   # ebx
-    movl %ecx, 8(%esp)   # ecx
-    movl %edx, 12(%esp)  # edx
-    movl %esi, 16(%esp)  # esi
-    movl %edi, 20(%esp)  # edi
+    pushf
+    pushl %ebp
+    pushl %edi   
+    pushl %esi   
+    pushl %edx   
+    pushl %ecx  
+    pushl %ebx 
+    pushl %eax   
 
     pushl %esp
+    
+    pushl %eax 
+    movw $0x18, %ax
+    movw %ax, %ds
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %gs
+    popl %eax
+    
     call syscalls_handler_c
-    addl $4, %esp
-
-    addl $24, %esp
-
+    
+    addl $12, %esp
+    
+    popl %ecx
+    popl %edx
+    popl %esi
+    popl %edi
+    popl %ebp
+    popf 
+    
+    pushl %eax
+    movw $0x4b, %ax
+    movw %ax, %ds
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %gs
+    popl %eax
+    
     iret
