@@ -6,7 +6,7 @@ int test_run(int n);
 
 int start_test(void *arg)
 {
-    for (int i = 1; i <= 20; i++)
+    for (int i = 6; i <= 20; i++)
     {
         printf("\n############## TEST %d ##############\n \n", i);
         test_run(i);
@@ -18,5 +18,5 @@ int start_test(void *arg)
 
 void user_start(void)
 {
-    start(start_test, 4000, 128, "StartTest", NULL);
+    start(start_test, 1000000, 128, "StartTest", NULL);
 }

@@ -205,7 +205,7 @@ print(struct printf_st *pf, char c)
 			/* Cas de l'ecriture sur un fichier. */
 			if (c == 0)
 				return;
-		
+
 			if (pf->pos_ecr < PRINTF_BUF_LEN - 1) {
 				pf->count++;
 				pf->buffer_ecr[pf->pos_ecr++] = c;
@@ -1218,23 +1218,37 @@ test6(void)
 	int ret;
 
 	assert(getprio(getpid()) == 128);
+	printf(" 1");
 	pid1 = start(__proc6_1, 0, 64, "proc6_1", 0);
 	assert(pid1 > 0);
+	printf(" 2");
 	pid2 = start(__proc6_2, 4, 66, "proc6_2", (void*)4);
 	assert(pid2 > 0);
+	printf(" 3");
 	pid3 = start(__proc6_2, 0xffffffff, 65, "proc6_3", (void*)5);
 	assert(pid3 < 0);
+	printf(" 4");
 	pid3 = start(__proc6_2, 8, 65, "proc6_3", (void*)5);
 	assert(pid3 > 0);
+	printf(" 5");
 	assert(waitpid(-1, &ret) == pid2);
+	printf(" 6");
 	assert(ret == 4);
+	printf(" 7");
 	assert(waitpid(-1, &ret) == pid3);
+	printf(" 8");
 	assert(ret == 5);
+	printf(" 9");
 	assert(waitpid(-1, &ret) == pid1);
+	printf(" 10");
 	assert(ret == 3);
+	printf(" 11");
 	assert(waitpid(pid1, 0) < 0);
+	printf(" 12");
 	assert(waitpid(-1, 0) < 0);
+	printf(" 13");
 	assert(waitpid(getpid(), 0) < 0);
+	printf(" 14");
 	printf("ok.\n");
 }
 
@@ -2317,13 +2331,13 @@ __asm__(
 extern void
 __hacking(void);
 
-static __inline__ void 
+static __inline__ void
 outb(unsigned char value, unsigned short port)
 {
 	__asm__ __volatile__("outb %0, %1" : : "a" (value), "Nd" (port));
 }
 
-static __inline__ unsigned char 
+static __inline__ unsigned char
 inb(unsigned short port)
 {
 	unsigned char rega;

@@ -11,28 +11,21 @@ traitant_IT_32:
     pushw %ds
     pushw %es
     pushw %fs
-    pushw %gs
-    
-    movw $0x18, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs
-    
+    pushw %gs 
+       
     pushl %eax
     pushl %ecx
     pushl %edx
-    pushl %ebx
-    pushl %esi
-    pushl %edi
-    pushl %ebp
+    
+    movw $0x18, %cx
+    movw %cx, %ds
+    movw %cx, %es
+    movw %cx, %fs
+    movw %cx, %gs
+
 # appel a la fonction C realisant le traitant
     call tic_PIT
 # restauration des registres importants
-    popl %ebp
-    popl %edi
-    popl %esi
-    popl %ebx
     popl %edx
     popl %ecx
     popl %eax
@@ -48,7 +41,6 @@ traitant_IT_32:
 
 traitant_IT_49:
     pushf
-    pushl %ebp
     pushl %edi   
     pushl %esi   
     pushl %edx   
@@ -69,20 +61,19 @@ traitant_IT_49:
     call syscalls_handler_c
     
     addl $12, %esp
-    
+   
     popl %ecx
     popl %edx
-    popl %esi
-    popl %edi
-    popl %ebp
+    
+    addl $8, %esp
     popf 
     
-    pushl %eax
-    movw $0x4b, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs
-    popl %eax
+    pushl %ecx
+    movw $0x4b, %cx
+    movw %cx, %ds
+    movw %cx, %es
+    movw %cx, %fs
+    movw %cx, %gs
+    popl %ecx
     
     iret

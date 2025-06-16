@@ -24,6 +24,7 @@
 #define EDI 4
 #define MAXPRIO 256
 #define TSS_ESP0 0x20004
+#define KERNEL_STACK_SIZE 0x1024
 
 #define queue_add_by_time(ptr_elem, head, type, listfield, wakeuptime) \
     do {                                                               \
