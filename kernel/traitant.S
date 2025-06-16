@@ -5,9 +5,7 @@
 traitant_IT_32:
 # sauvegarde des registres importants
 
-    # Met les segments en mode noyau (0x18 = index 3, ring 0, GDT)
-    
-    pushf
+    # Met les segments en mode noyau (0x18 = index 3, ring 0, GDT)    
     pushw %ds
     pushw %es
     pushw %fs
@@ -17,11 +15,13 @@ traitant_IT_32:
     pushl %ecx
     pushl %edx
     
+    pushl %ecx 
     movw $0x18, %cx
     movw %cx, %ds
     movw %cx, %es
     movw %cx, %fs
     movw %cx, %gs
+    popl %ecx
 
 # appel a la fonction C realisant le traitant
     call tic_PIT
@@ -33,14 +33,11 @@ traitant_IT_32:
     popw %gs
     popw %fs
     popw %es
-    popw %ds
-    popf
-    
+    popw %ds    
 # fin du traitant
     iret
 
 traitant_IT_49:
-    pushf
     pushl %edi   
     pushl %esi   
     pushl %edx   
@@ -50,23 +47,17 @@ traitant_IT_49:
 
     pushl %esp
     
-    pushl %eax 
-    movw $0x18, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs
-    popl %eax
+    pushl %ecx 
+    movw $0x18, %cx
+    movw %cx, %ds
+    movw %cx, %es
+    movw %cx, %fs
+    movw %cx, %gs
+    popl %ecx
     
     call syscalls_handler_c
     
-    addl $12, %esp
-   
-    popl %ecx
-    popl %edx
-    
-    addl $8, %esp
-    popf 
+    addl $28, %esp
     
     pushl %ecx
     movw $0x4b, %cx

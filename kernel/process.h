@@ -99,6 +99,7 @@ typedef struct process_t
 void destroy(process_t *p_to_destroy);
 extern process_t *process_array[NBPROC];
 extern void ctx_sw(int32_t *prev_regs, int32_t *next_regs);
+extern void user_launch(int32_t *prev_regs, int32_t *next_regs);
 extern process_t *running_process;
 extern process_t *process_self_killed;
 extern link head_ready;

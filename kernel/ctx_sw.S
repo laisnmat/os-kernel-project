@@ -19,19 +19,5 @@ restore :
     movl 12(%eax), %esi
     movl 16(%eax), %edi
         
-    # Vérifie si on doit faire un iret (premier lancement)
-    # On regarde si le retour pointe vers un segment Ring 3 (USER_CS = 0x43)
-    cmpl $0x43, 4(%esp) 
-    je user_launch
     # on passe la main au nouveau processus
     ret
-
-user_launch:
-    pushl %eax 
-    movw $0x4b, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %fs
-    movw %ax, %gs
-    popl %eax
-    iret

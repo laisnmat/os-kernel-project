@@ -133,22 +133,6 @@ int kill(int pid)
     return 0;
 }
 
-void process_wrapper(void)
-{
-    /** Execution stack layout:
-     *  +----------------------+
-     *  |         arg          | ssize - 1
-     *  +----------------------+
-     *  *       pt_func        | ssize - 2
-     *  +----------------------+
-     **/
-    unsigned long ssize = running_process->ssize;
-    int (*pt_func)(void *) = (int (*)(void *))running_process->execution_stack[ssize - 2];
-    void *arg = (void *)running_process->execution_stack[ssize - 1];
-    int retval = pt_func(arg);
-    exit(retval);
-}
-
 int waitpid(int pid, int *retvalp)
 {
     bool wait_any_child = (pid < 0);
@@ -230,8 +214,7 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     current_p->user_stack = user_stack_alloc(ssize * sizeof(int32_t));
     if (current_p->user_stack == NULL) return -1;
     current_p->user_stack[ssize - 1] = (int32_t)arg;
-    current_p->user_stack[ssize - 2] = 0x100003f; //Adresse fixe du return_exit présent dans syscalls.h
-    //current_p->user_stack[ssize - 3] = (int32_t)pt_func;
+    current_p->user_stack[ssize - 2] = 0x1000033; //Adresse fixe du return_exit présent dans syscalls.h
     current_p->execution_stack = mem_alloc(KERNEL_STACK_SIZE * sizeof(int32_t));
     // Vérifie que le mem_alloc ne plante pas
     if (current_p->execution_stack == NULL) return -1;
@@ -240,7 +223,8 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     current_p->execution_stack[KERNEL_STACK_SIZE - 3] = 0x202;
     current_p->execution_stack[KERNEL_STACK_SIZE - 4] = USER_CS;
     current_p->execution_stack[KERNEL_STACK_SIZE - 5] = (int32_t)pt_func;
-    current_p->regs[ESP] = (int32_t)&current_p->execution_stack[KERNEL_STACK_SIZE - 5];
+    current_p->execution_stack[KERNEL_STACK_SIZE - 6] = (int32_t)user_launch;
+    current_p->regs[ESP] = (int32_t)&current_p->execution_stack[KERNEL_STACK_SIZE - 6];
     current_p->prio = prio;
     current_p->fid_destroyed_or_reset = false;
     INIT_LIST_HEAD(&current_p->children.head);
