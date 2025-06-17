@@ -6,6 +6,7 @@ traitant_IT_32:
 # sauvegarde des registres importants
 
     # Met les segments en mode noyau (0x18 = index 3, ring 0, GDT)    
+    pushl %ebp
     pushw %ds
     pushw %es
     pushw %fs
@@ -34,10 +35,12 @@ traitant_IT_32:
     popw %fs
     popw %es
     popw %ds    
+    popl %ebp
 # fin du traitant
     iret
 
 traitant_IT_49:
+    pushl %ebp
     pushl %edi   
     pushl %esi   
     pushl %edx   
@@ -57,7 +60,7 @@ traitant_IT_49:
     
     call syscalls_handler_c
     
-    addl $28, %esp
+    addl $8, %esp
     
     pushl %ecx
     movw $0x4b, %cx
@@ -66,5 +69,12 @@ traitant_IT_49:
     movw %cx, %fs
     movw %cx, %gs
     popl %ecx
+    
+    popl %ebx
+    popl %ecx
+    popl %edx
+    popl %esi
+    popl %edi
+    popl %ebp
     
     iret

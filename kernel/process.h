@@ -11,7 +11,7 @@
 #include "../shared/stdint.h"
 #include "../shared/queue.h"
 
-#define REQUIRED_STACK_SIZE 64
+#define REQUIRED_STACK_SIZE 16
 #define MAX_STACK_SIZE 0xFFFFFFFF
 
 #define NUMBER_REGISTERS 5
@@ -23,8 +23,7 @@
 #define ESI 3
 #define EDI 4
 #define MAXPRIO 256
-#define TSS_ESP0 0x20004
-#define KERNEL_STACK_SIZE 0x1024
+#define KERNEL_STACK_SIZE 0x128
 
 #define queue_add_by_time(ptr_elem, head, type, listfield, wakeuptime) \
     do {                                                               \
