@@ -25,5 +25,6 @@ unsigned long current_clock();
 
 extern void traitant_IT_32(void);
 extern void traitant_IT_49(void);
+extern void traitant_IT_13(void);
 
 #endif // PSYS_BASE_CLOCK_H

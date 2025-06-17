@@ -1,6 +1,7 @@
 # cette directive sert a rendre l'etiquette publique
     .globl traitant_IT_32
     .globl traitant_IT_49
+    .globl traitant_IT_13
 # debut du traitant
 traitant_IT_32:
 # sauvegarde des registres importants
@@ -77,4 +78,8 @@ traitant_IT_49:
     popl %edi
     popl %ebp
     
+    iret
+    
+traitant_IT_13:          
+    call gpf_handler
     iret

@@ -2,7 +2,6 @@
 #include "syscalls.h"
 #include "../shared/stdio.h"
 
-
 void __printf(const char *fmt, ...)
 {
     char buf[256];
@@ -14,6 +13,7 @@ void __printf(const char *fmt, ...)
 }
 
 int test_run(int n);
+int test_phase_5();
 
 int start_test(void *arg)
 {
@@ -23,11 +23,12 @@ int start_test(void *arg)
         test_run(i);
         __printf("\n############## FIN TEST %d ##############\n", i);
     }
+    test_phase_5();
     return (int)arg;
 }
 
 
 void user_start(void)
 {
-    start(start_test, 1000000, 128, "StartTest", NULL);
+    start(start_test, 512, 128, "StartTest", NULL);
 }

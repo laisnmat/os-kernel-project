@@ -62,10 +62,11 @@ void kernel_start(void)
     clock_settings(&quartz, &ticks);
     init_traitant_IT(32, traitant_IT_32, 0);
     init_traitant_IT(0x49, traitant_IT_49, 3); // handler pour les appels système
+    init_traitant_IT(13, traitant_IT_13, 3);
     masque_IRQ(0, 0);
     init_msg_queue_array();
     start_idle();
-    start((int (*)(void *))0x1000000, 4000, 128, "User Proc", NULL);
+    start((int (*)(void *))0x1000000, 512, 128, "User Proc", NULL);
     idle();
     while (1)
         hlt();
