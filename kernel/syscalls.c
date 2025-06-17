@@ -67,6 +67,12 @@ int syscalls_handler_c(syscall_args_t *args)
     case 15:
         wait_clock(args->ebx);
         break;
+    case 16:
+        clock_settings((unsigned long *)args->ebx, (unsigned long *)args->ecx);
+        break;
+    case 17:
+        ret = current_clock();
+        break;
     default:
         break;
     }

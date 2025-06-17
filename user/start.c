@@ -17,7 +17,7 @@ int test_run(int n);
 
 int start_test(void *arg)
 {
-    for (int i = 8; i <= 20; i++)
+    for (int i = 1; i <= 20; i++)
     {
         __printf("\n############## TEST %d ##############\n \n", i);
         test_run(i);

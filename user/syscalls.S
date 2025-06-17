@@ -14,6 +14,8 @@
 .global preceive
 .global preset
 .global wait_clock
+.global clock_settings
+.global current_clock
 
 exit:
     pushl %ebx
@@ -152,4 +154,20 @@ wait_clock:
     movl 4+4(%esp), %ebx
     int $0x49
     popl %ebx
+    ret
+
+clock_settings:
+    pushl %ebx
+    pushl %ecx
+    movl $16, %eax
+    movl 4+8(%esp), %ebx       
+    movl 8+8(%esp), %ecx      
+    int $0x49
+    popl %ecx
+    popl %ebx
+    ret
+
+current_clock:
+    movl $17, %eax
+    int $0x49
     ret

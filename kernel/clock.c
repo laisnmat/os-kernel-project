@@ -5,6 +5,7 @@
 
 unsigned long nb_interruptions = 0;
 unsigned long long idt[IDT_ENTRIES];
+static unsigned sched_counter = 0;
 
 void display_char_top_right(char *chaine)
 {
@@ -22,7 +23,10 @@ void tic_PIT(void)
     //const uint32_t seconds = nb_interruptions / CLOCKFREQ;
     // sprintf(buffer, "%02d:%02d:%02d", seconds / 3600, (seconds / 60) % 60, seconds % 60);
     // display_char_top_right(buffer);
-    schedule();
+    if (++sched_counter >= CLOCKFREQ / SCHEDFREQ) {
+        sched_counter = 0;
+        schedule();
+    }
 }
 
 void init_traitant_IT(unsigned long num_IT, void (*traitant)(void), int dpl)

@@ -66,6 +66,7 @@ void kernel_start(void)
     init_msg_queue_array();
     start_idle();
     start((int (*)(void *))0x1000000, 4000, 128, "User Proc", NULL);
+    idle();
     while (1)
         hlt();
     return;

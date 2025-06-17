@@ -17,5 +17,6 @@ int psend(int fid, int msg);
 int preceive(int fid, int *msg);
 int preset(int fid);
 void wait_clock(unsigned long clock);
-
+void clock_settings(unsigned long *quartz, unsigned long *ticks);
+unsigned long current_clock();
 #endif // SYSCALLS_H
