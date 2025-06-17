@@ -205,19 +205,24 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     }
     process_array[pid] = mem_alloc(sizeof(process_t));
     // Vérifie que le mem_alloc ne plante pas
-    if (process_array[pid] == NULL) return -1;
+    if (process_array[pid] == NULL)
+        return -1;
     process_t *current_p = process_array[pid];
     current_p->pid = pid;
-    strcpy(current_p->name, name);
+    strncpy(current_p->name, name, PROCESS_NAME_MAX - 1);
+    current_p->name[PROCESS_NAME_MAX - 1] = '\0';
     current_p->state = STATE_READY;
     current_p->ssize = ssize;
     current_p->user_stack = user_stack_alloc(ssize * sizeof(int32_t));
-    if (current_p->user_stack == NULL) return -1;
+    if (current_p->user_stack == NULL)
+        return -1;
     current_p->user_stack[ssize - 1] = (int32_t)arg;
-    current_p->user_stack[ssize - 2] = 0x1000033; //Adresse fixe du return_exit présent dans syscalls.h
+    current_p->user_stack[ssize - 2] = 0x1000033;
+    //Adresse fixe du return_exit présent dans syscalls.h
     current_p->execution_stack = mem_alloc(KERNEL_STACK_SIZE * sizeof(int32_t));
     // Vérifie que le mem_alloc ne plante pas
-    if (current_p->execution_stack == NULL) return -1;
+    if (current_p->execution_stack == NULL)
+        return -1;
     current_p->execution_stack[KERNEL_STACK_SIZE - 1] = USER_DS;
     current_p->execution_stack[KERNEL_STACK_SIZE - 2] = (int32_t)&current_p->user_stack[ssize - 2];
     current_p->execution_stack[KERNEL_STACK_SIZE - 3] = 0x202;

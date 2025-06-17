@@ -25,14 +25,23 @@ int syscalls_handler_c(syscall_args_t *args)
         exit(args->ebx);
         break;
     case 2:
-        cons_write((const char *)args->ebx, args->ecx);
+        if ((char *)args->ebx < (char *)0x1000000)
+            ret = -1;
+        else
+            cons_write((const char *)args->ebx, args->ecx);
         break;
     case 3:
-        ret = start((int (*)(void *))args->ebx, args->ecx, args->edx, (const char *)args->esi,
-                    (void *)args->edi);
+        if ((char *)args->esi < (char *)0x1000000 && args->esi != 0)
+            ret = -1;
+        else
+            ret = start((int (*)(void *))args->ebx, args->ecx, args->edx, (const char *)args->esi,
+                        (void *)args->edi);
         break;
     case 4:
-        ret = waitpid(args->ebx, (int *)args->ecx);
+        if ((int *)args->ecx < (int *)0x1000000 && args->ecx != 0)
+            ret = -1;
+        else
+            ret = waitpid(args->ebx, (int *)args->ecx);
         break;
     case 5:
         ret = kill(args->ebx);
@@ -53,13 +62,19 @@ int syscalls_handler_c(syscall_args_t *args)
         ret = pdelete(args->ebx);
         break;
     case 11:
-        ret = pcount(args->ebx, (int *)args->ecx);
+        if ((int *)args->ecx < (int *)0x1000000 && args->ecx != 0)
+            ret = -1;
+        else
+            ret = pcount(args->ebx, (int *)args->ecx);
         break;
     case 12:
         ret = psend(args->ebx, args->ecx);
         break;
     case 13:
-        ret = preceive(args->ebx, (int *)args->ecx);
+        if ((int *)args->ecx < (int *)0x1000000 && args->ecx != 0)
+            ret = -1;
+        else
+            ret = preceive(args->ebx, (int *)args->ecx);
         break;
     case 14:
         ret = preset(args->ebx);
@@ -68,7 +83,11 @@ int syscalls_handler_c(syscall_args_t *args)
         wait_clock(args->ebx);
         break;
     case 16:
-        clock_settings((unsigned long *)args->ebx, (unsigned long *)args->ecx);
+        if (((int *)args->ecx < (int *)0x1000000) || (
+                (int *)args->ebx < (int *)0x1000000))
+            ret = -1;
+        else
+            clock_settings((unsigned long *)args->ebx, (unsigned long *)args->ecx);
         break;
     case 17:
         ret = current_clock();

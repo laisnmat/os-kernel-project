@@ -28,7 +28,7 @@ int helloworld2(void *arg)
     printf("pid start hw1 : %d\n",
            start(helloworld1, MAX_STACK_SIZE, 255, "HW1", "child1 of helloworld2"));
     printf("pid start hw3 : %d\n", start(helloworld3, MAX_STACK_SIZE, 10, "HW3", (void *)2));
-    wait_clock(300); // Attendre 100 ticks
+    wait_clock(300); // Attendre 300 ticks
     printf("Hello world 2 : Je me suis réveillé\n");
     return (int)arg;
 }
