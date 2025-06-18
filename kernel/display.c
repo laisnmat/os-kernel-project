@@ -95,12 +95,12 @@ void console_putbytes(char *chaine, int32_t taille)
     }
 }
 
-void cons_write(const char *str, long size)
+void cons_write(const char *str, unsigned long size)
 {
     if (str == NULL || size <= 0)
         return;
 
-    for (long i = 0; i < size; i++)
+    for (unsigned long i = 0; i < size; i++)
     {
         traite_car(str[i]);
     }
