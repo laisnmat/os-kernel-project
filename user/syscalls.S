@@ -16,6 +16,8 @@
 .global wait_clock
 .global clock_settings
 .global current_clock
+.global cons_echo
+.global cons_read
 
 exit:
     pushl %ebx
@@ -24,7 +26,7 @@ exit:
     int $0x49
     popl %ebx
     ret
-    
+
 return_exit:
     pushl %ebx
     movl %eax, %ebx
@@ -158,16 +160,31 @@ wait_clock:
 
 clock_settings:
     pushl %ebx
-    pushl %ecx
     movl $16, %eax
-    movl 4+8(%esp), %ebx       
-    movl 8+8(%esp), %ecx      
+    movl 4+4(%esp), %ebx
+    movl 8+4(%esp), %ecx
     int $0x49
-    popl %ecx
     popl %ebx
     ret
 
 current_clock:
     movl $17, %eax
     int $0x49
+    ret
+
+cons_echo:
+    pushl %ebx
+    movl $18, %eax
+    movl 4+4(%esp), %ebx
+    int $0x49
+    popl %ebx
+    ret
+
+cons_read:
+    pushl %ebx
+    movl $19, %eax
+    movl 4+4(%esp), %ebx  
+    movl 8+4(%esp), %ecx  
+    int $0x49
+    popl %ebx
     ret

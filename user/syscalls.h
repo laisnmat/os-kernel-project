@@ -4,6 +4,8 @@
 void exit(int retval);
 void return_exit(int retval);
 void cons_write(const char *str, unsigned long len);
+void cons_echo(int on);
+int cons_read(char *string, unsigned long length);
 int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name, void *arg);
 int waitpid(int pid, int *retvalp);
 int kill(int pid);

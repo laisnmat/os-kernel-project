@@ -1,6 +1,7 @@
 #include "clock.h"
 #include "debug.h"
 #include "display.h"
+#include "keyboard.h"
 #include "mem.h"
 #include "messages.h"
 #include "process.h"
@@ -83,14 +84,22 @@ int syscalls_handler_c(syscall_args_t *args)
         wait_clock(args->ebx);
         break;
     case 16:
-        if (((int *)args->ecx < (int *)0x1000000) || (
-                (int *)args->ebx < (int *)0x1000000))
+        if (((int *)args->ecx < (int *)0x1000000) || ((int *)args->ebx < (int *)0x1000000))
             ret = -1;
         else
             clock_settings((unsigned long *)args->ebx, (unsigned long *)args->ecx);
         break;
     case 17:
         ret = current_clock();
+        break;
+    case 18:
+        cons_echo(args->ebx);
+        break;
+    case 19:
+        if ((char *)args->ebx < (char *)0x1000000)
+            ret = -1;
+        else
+            ret = cons_read((char *)args->ebx, args->ecx);
         break;
     default:
         break;

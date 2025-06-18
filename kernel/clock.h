@@ -24,7 +24,9 @@ void clock_settings(unsigned long *quartz, unsigned long *ticks);
 unsigned long current_clock();
 
 extern void traitant_IT_32(void);
+extern void traitant_IT_33(void);
 extern void traitant_IT_49(void);
 extern void traitant_IT_13(void);
+extern void tic_kbd(void);
 
 #endif // PSYS_BASE_CLOCK_H
