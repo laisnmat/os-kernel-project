@@ -4,6 +4,7 @@
 #include "../shared/queue.h"
 
 #include "../shared/stdlib.h"
+#include "boot/processor_structs.h"
 
 void wakeup_processes()
 {
@@ -42,5 +43,6 @@ void schedule(void)
     }
     next_process->state = STATE_RUNNING;
     running_process = next_process;
+    tss.esp0 = (int)&next_process->execution_stack[KERNEL_STACK_SIZE];
     ctx_sw(current_p->regs, next_process->regs);
 }

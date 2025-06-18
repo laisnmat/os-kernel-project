@@ -2,6 +2,8 @@
 #include "../shared/queue.h"
 #include "mem.h"
 #include "string.h"
+#include "user_stack_mem.h"
+
 process_t *process_array[NBPROC];
 process_t *running_process = NULL;
 process_t *process_self_killed = NULL;
@@ -44,7 +46,8 @@ void destroy(process_t *p_to_destroy)
         queue_del(p_to_destroy, children.next);
     }
     int pid = p_to_destroy->pid;
-    mem_free(p_to_destroy->execution_stack, p_to_destroy->ssize * sizeof(int32_t));
+    user_stack_free(p_to_destroy->user_stack, p_to_destroy->ssize * sizeof(int32_t));
+    mem_free(p_to_destroy->execution_stack, KERNEL_STACK_SIZE * sizeof(int32_t));
     mem_free(p_to_destroy, sizeof(process_t));
     process_array[pid] = NULL;
 }
@@ -130,22 +133,6 @@ int kill(int pid)
     return 0;
 }
 
-void process_wrapper(void)
-{
-    /** Execution stack layout:
-     *  +----------------------+
-     *  |         arg          | ssize - 1
-     *  +----------------------+
-     *  *       pt_func        | ssize - 2
-     *  +----------------------+
-     **/
-    unsigned long ssize = running_process->ssize;
-    int (*pt_func)(void *) = (int (*)(void *))running_process->execution_stack[ssize - 2];
-    void *arg = (void *)running_process->execution_stack[ssize - 1];
-    int retval = pt_func(arg);
-    exit(retval);
-}
-
 int waitpid(int pid, int *retvalp)
 {
     bool wait_any_child = (pid < 0);
@@ -218,28 +205,31 @@ int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *nam
     }
     process_array[pid] = mem_alloc(sizeof(process_t));
     // Vérifie que le mem_alloc ne plante pas
-    if (process_array[pid] == NULL) return -1;
+    if (process_array[pid] == NULL)
+        return -1;
     process_t *current_p = process_array[pid];
     current_p->pid = pid;
-    strcpy(current_p->name, name);
+    strncpy(current_p->name, name, PROCESS_NAME_MAX - 1);
+    current_p->name[PROCESS_NAME_MAX - 1] = '\0';
     current_p->state = STATE_READY;
     current_p->ssize = ssize;
-    current_p->execution_stack = mem_alloc(ssize * sizeof(int32_t));
+    current_p->user_stack = user_stack_alloc(ssize * sizeof(int32_t));
+    if (current_p->user_stack == NULL)
+        return -1;
+    current_p->user_stack[ssize - 1] = (int32_t)arg;
+    current_p->user_stack[ssize - 2] = 0x1000033;
+    //Adresse fixe du return_exit présent dans syscalls.h
+    current_p->execution_stack = mem_alloc(KERNEL_STACK_SIZE * sizeof(int32_t));
     // Vérifie que le mem_alloc ne plante pas
-    if (current_p->execution_stack == NULL) return -1;
-    /** Execution stack layout:
-     *  +----------------------+
-     *  |         arg          | ssize - 1
-     *  +----------------------+
-     *  *      pt_func         | ssize - 2
-     *  +----------------------+
-     *  | call process_wrapper | ssize - 3
-     *  +----------------------+ <-- %esp
-     **/
-    current_p->execution_stack[ssize - 1] = (int32_t)arg;
-    current_p->execution_stack[ssize - 2] = (int32_t)pt_func;
-    current_p->execution_stack[ssize - 3] = (int32_t)process_wrapper;
-    current_p->regs[ESP] = (int32_t)&current_p->execution_stack[ssize - 3];
+    if (current_p->execution_stack == NULL)
+        return -1;
+    current_p->execution_stack[KERNEL_STACK_SIZE - 1] = USER_DS;
+    current_p->execution_stack[KERNEL_STACK_SIZE - 2] = (int32_t)&current_p->user_stack[ssize - 2];
+    current_p->execution_stack[KERNEL_STACK_SIZE - 3] = 0x202;
+    current_p->execution_stack[KERNEL_STACK_SIZE - 4] = USER_CS;
+    current_p->execution_stack[KERNEL_STACK_SIZE - 5] = (int32_t)pt_func;
+    current_p->execution_stack[KERNEL_STACK_SIZE - 6] = (int32_t)user_launch;
+    current_p->regs[ESP] = (int32_t)&current_p->execution_stack[KERNEL_STACK_SIZE - 6];
     current_p->prio = prio;
     current_p->fid_destroyed_or_reset = false;
     INIT_LIST_HEAD(&current_p->children.head);

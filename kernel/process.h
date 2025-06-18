@@ -11,7 +11,7 @@
 #include "../shared/stdint.h"
 #include "../shared/queue.h"
 
-#define REQUIRED_STACK_SIZE 64
+#define REQUIRED_STACK_SIZE 16
 #define MAX_STACK_SIZE 0xFFFFFFFF
 
 #define NUMBER_REGISTERS 5
@@ -23,6 +23,7 @@
 #define ESI 3
 #define EDI 4
 #define MAXPRIO 256
+#define KERNEL_STACK_SIZE 0x128
 
 #define queue_add_by_time(ptr_elem, head, type, listfield, wakeuptime) \
     do {                                                               \
@@ -74,6 +75,7 @@ typedef struct process_t
     State state;
     int32_t regs[NUMBER_REGISTERS];
     int32_t *execution_stack;
+    int32_t *user_stack;
     unsigned long ssize;
     link next;
     unsigned long wakeup_time;
@@ -96,6 +98,7 @@ typedef struct process_t
 void destroy(process_t *p_to_destroy);
 extern process_t *process_array[NBPROC];
 extern void ctx_sw(int32_t *prev_regs, int32_t *next_regs);
+extern void user_launch(int32_t *prev_regs, int32_t *next_regs);
 extern process_t *running_process;
 extern process_t *process_self_killed;
 extern link head_ready;
