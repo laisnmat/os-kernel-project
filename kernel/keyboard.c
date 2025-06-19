@@ -35,7 +35,7 @@ int kbd_buffer_push(char c)
     kbd_buffer.count++;
     kbd_buffer.buffer[kbd_buffer.cursor] = c;
     kbd_buffer.cursor = (kbd_buffer.cursor + 1) % KBD_BUFFER_SIZE;
-    if (kbd_buffer.echo_enabled) traite_car(c);
+    if (kbd_buffer.echo_enabled && c >= 32) traite_car(c);
     return kbd_buffer.count;
 }
 
@@ -55,7 +55,16 @@ int kbd_buffer_backspace(void)
     if (kbd_buffer.count == 0 || kbd_buffer.buffer[kbd_buffer.cursor] == CR || kbd_buffer.buffer[kbd_buffer.cursor] == HT) return -1;
     kbd_buffer.count--;
     kbd_buffer.cursor = (kbd_buffer.cursor - 1 + KBD_BUFFER_SIZE) % KBD_BUFFER_SIZE;
-    if (kbd_buffer.echo_enabled) cons_write("\b \b", 3);
+    char removed_c = kbd_buffer.buffer[kbd_buffer.cursor];
+    if (kbd_buffer.echo_enabled) {
+        if (removed_c < 32) {
+            // Effacement des caractères de contrôle (double pour effacer le ^ en +)
+            cons_write("\b \b\b \b", 6);
+        } else {
+            // Effacement des caractères lambda
+            cons_write("\b \b", 3);
+        }
+    }
     return kbd_buffer.buffer[kbd_buffer.cursor];
 }
 
@@ -68,7 +77,7 @@ void cons_echo(int on)
 
 void keyboard_data(char *str)
 {
-    if (strcmp(str, "\033[A") == 0)
+    if (strcmp(str, "\033[A") == 0) //up arrow
     {
         char *cmd = history_up();
         while (kbd_buffer_backspace() >= 0); // Clear the buffer
@@ -80,7 +89,7 @@ void keyboard_data(char *str)
         }
         return;
     }
-    if (strcmp(str, "\033[B") == 0)
+    if (strcmp(str, "\033[B") == 0) //down arrow
     {
         char *cmd = history_down();
         while (kbd_buffer_backspace() >= 0); // Clear the buffer
@@ -93,6 +102,11 @@ void keyboard_data(char *str)
         return;
     }
     reset_up_count();
+    if (strcmp(str, "\033[C") == 0 || strcmp(str, "\033[D") == 0)
+    {
+        // Ignore left/right arrow keys
+        return;
+    }
     for (char c = *str; c != '\0'; c = *(++str)) {
         switch (c)
         {
@@ -118,7 +132,17 @@ void keyboard_data(char *str)
             if (kbd_buffer.echo_enabled) traite_car('\b');
             break;
         default:
-            kbd_buffer_push(c);
+            if (c < 32) {
+                if (kbd_buffer.echo_enabled) {
+                    char ctrl_str[2] = {'^', c+'@'};
+                    cons_write(ctrl_str, 2);
+                }
+                kbd_buffer_push(c);
+                break;
+            }
+            if (c <= 126) {
+                kbd_buffer_push(c);
+            }
             break;
         }
 
