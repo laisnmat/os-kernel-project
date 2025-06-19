@@ -4,45 +4,7 @@
 #include "msg_queue.h"
 #include "process.h"
 
-int test_run(int n);
-
-int helloworld1(void *arg)
-{
-    if (true)
-    {
-        printf("Hello world 1 : avec exit et args : %s\n", (char *)arg);
-        exit(1);
-    }
-    return -1;
-}
-
-int helloworld3(void *arg)
-{
-    printf("Hello world 3\n");
-    return (int)arg;
-}
-
-int helloworld2(void *arg)
-{
-    printf("Hello world 2 : Je vais m'endormir\n");
-    printf("pid start hw1 : %d\n",
-           start(helloworld1, MAX_STACK_SIZE, 255, "HW1", "child1 of helloworld2"));
-    printf("pid start hw3 : %d\n", start(helloworld3, MAX_STACK_SIZE, 10, "HW3", (void *)2));
-    wait_clock(300); // Attendre 300 ticks
-    printf("Hello world 2 : Je me suis réveillé\n");
-    return (int)arg;
-}
-
-int start_test(void *arg)
-{
-    for (int i = 1; i <= 20; i++)
-    {
-        printf("\n############## TEST %d ##############\n \n", i);
-        test_run(i);
-        printf("\n############## FIN TEST %d ##############\n", i);
-    }
-    return (int)arg;
-}
+#define start_user 0x1000000
 
 void idle()
 {
@@ -69,7 +31,7 @@ void kernel_start(void)
     init_msg_queue_array();
     start_idle();
 
-    start((int (*)(void *))0x1000000, 256, 128, "User Proc", NULL);
+    start((int (*)(void *))start_user, 256, 2, "User Proc", NULL);
     idle();
     while (1)
         hlt();

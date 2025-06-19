@@ -9,7 +9,7 @@ bool is_valid_fid(int fid)
 
 int pcreate(int count)
 {
-    if (NB_QUEUE >= MAX_NB_QUEUE || count <= 0 || count >= 1073741827)
+    if (NB_QUEUE >= MAX_NB_QUEUE || count <= 0 || count >= MAX_QUEUE_CAPACITY)
         return -1;
 
     int fid = 0;

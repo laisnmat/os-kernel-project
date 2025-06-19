@@ -1,5 +1,5 @@
 #include "process.h"
-#include "../shared/queue.h"
+#include <queue.h>
 #include "mem.h"
 #include "string.h"
 #include "user_stack_mem.h"
@@ -133,6 +133,24 @@ int kill(int pid)
     return 0;
 }
 
+int killall(const char *name)
+{
+    if (name == NULL || strlen(name) == 0)
+    {
+        return -1; // Nom invalide
+    }
+    int killed_count = 0;
+    for (int i = 0; i < NBPROC; i++)
+    {
+        if (process_array[i] != NULL && strcmp(process_array[i]->name, name) == 0)
+        {
+            kill(process_array[i]->pid);
+            killed_count++;
+        }
+    }
+    return killed_count;
+}
+
 int waitpid(int pid, int *retvalp)
 {
     bool wait_any_child = (pid < 0);
@@ -188,7 +206,7 @@ int waitpid(int pid, int *retvalp)
 
 int start(int (*pt_func)(void *), unsigned long ssize, int prio, const char *name, void *arg)
 {
-    if (ssize >= MAX_STACK_SIZE - REQUIRED_STACK_SIZE)
+    if (ssize >= (unsigned long) (MAX_STACK_SIZE - REQUIRED_STACK_SIZE))
     {
         return -1;
     }
@@ -292,4 +310,46 @@ void wait_clock(unsigned long clock)
     current_p->wakeup_time = clock;
     queue_add_by_time(current_p, &head_sleeping, process_t, next, wakeup_time);
     schedule();
+}
+
+void ps(void)
+{
+    for (int i = 0; i < NBPROC; i++)
+    {
+        if (process_array[i] != NULL)
+        {
+            char state[12];
+            switch (process_array[i]->state)
+            {
+            case STATE_RUNNING:
+                strcpy(state, "RUNNING");
+                break;
+            case STATE_READY:
+                strcpy(state, "READY");
+                break;
+            case STATE_BLOCKED_MSG:
+                strcpy(state, "BLOCKED_MSG");
+                break;
+            case STATE_BLOCKED_SEM:
+                strcpy(state, "BLOCKED_SEM");
+                break;
+            case STATE_BLOCKED_IO:
+                strcpy(state, "BLOCKED_IO");
+                break;
+            case STATE_WAIT_CHILD:
+                strcpy(state, "WAIT_CHILD");
+                break;
+            case STATE_SLEEPING:
+                strcpy(state, "SLEEPING");
+                break;
+            case STATE_ZOMBIE:
+                strcpy(state, "ZOMBIE");
+                break;
+            default:
+                break;
+            }
+            printf("PID: %d\tName: %s\tState: %s\n", process_array[i]->pid, process_array[i]->name,
+                   state);
+        }
+    }
 }

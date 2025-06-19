@@ -1,7 +1,7 @@
 #ifndef PARAMS
 #define PARAMS
-#include "../shared/stdint.h"
-#include "../shared/string.h"
+#include <stdint.h>
+#include <string.h>
 // Taille de la fenêtre
 #define NB_LIGNE 25
 #define NB_COLONNE 80
@@ -42,4 +42,10 @@
 //cursor position
 extern uint32_t LIG_CURSOR;
 extern uint32_t COL_CURSOR;
+
+
+extern int primary_color;
+extern int secondary_color;
+extern int tertiary_color;
+
 #endif

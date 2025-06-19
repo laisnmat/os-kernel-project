@@ -1,7 +1,6 @@
 #include "clock.h"
 
 #include "process.h"
-#include "../shared/stdio.h"
 
 unsigned long nb_interruptions = 0;
 unsigned long long idt[IDT_ENTRIES];

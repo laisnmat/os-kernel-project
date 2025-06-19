@@ -5,7 +5,7 @@
 #define CLOCKFREQ 100
 #define SCHEDFREQ 50
 
-#include "../shared/stdlib.h"
+#include <stdlib.h>
 #include "boot/processor_structs.h"
 #include "display.h"
 #include "scheduler.h"
