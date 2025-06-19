@@ -1,6 +1,8 @@
 # PSYS
 
-![](assets/image.png)
+![img.png](assets/img.png)
+![help.png](assets/help.png)
+
 
 ## Commandes disponibles
 
