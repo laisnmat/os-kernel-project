@@ -21,4 +21,8 @@ int preset(int fid);
 void wait_clock(unsigned long clock);
 void clock_settings(unsigned long *quartz, unsigned long *ticks);
 unsigned long current_clock();
+void ps(void);
+void print_history(void);
+int killall(const char *name);
+
 #endif // SYSCALLS_H

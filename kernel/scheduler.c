@@ -1,9 +1,9 @@
 #include "scheduler.h"
 
 #include "process.h"
-#include "../shared/queue.h"
+#include <queue.h>
 
-#include "../shared/stdlib.h"
+#include <stdlib.h>
 #include "boot/processor_structs.h"
 
 void wakeup_processes()

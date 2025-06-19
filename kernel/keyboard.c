@@ -1,6 +1,7 @@
 #include "display.h"
 #include "keyboard.h"
 #include "process.h"
+#include "history.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -25,6 +26,18 @@ static kbd_buffer_t kbd_buffer = {
 };
 
 
+void wakeup_waiting_io_processes(void)
+{
+    if (!queue_empty(&blocked_io_processes))
+    {
+        process_t *p = queue_out(&blocked_io_processes, process_t, next);
+        p->state = STATE_READY;
+        queue_add(p, &head_ready, process_t, next, prio);
+        schedule();
+    }
+}
+
+
 int kbd_buffer_push(char c)
 {
    if (kbd_buffer.count >= KBD_BUFFER_SIZE)
@@ -34,7 +47,7 @@ int kbd_buffer_push(char c)
     kbd_buffer.count++;
     kbd_buffer.buffer[kbd_buffer.cursor] = c;
     kbd_buffer.cursor = (kbd_buffer.cursor + 1) % KBD_BUFFER_SIZE;
-    if (kbd_buffer.echo_enabled) traite_car(c);
+    if (kbd_buffer.echo_enabled && c >= 32) traite_car(c);
     return kbd_buffer.count;
 }
 
@@ -54,7 +67,16 @@ int kbd_buffer_backspace(void)
     if (kbd_buffer.count == 0 || kbd_buffer.buffer[kbd_buffer.cursor] == CR || kbd_buffer.buffer[kbd_buffer.cursor] == HT) return -1;
     kbd_buffer.count--;
     kbd_buffer.cursor = (kbd_buffer.cursor - 1 + KBD_BUFFER_SIZE) % KBD_BUFFER_SIZE;
-    if (kbd_buffer.echo_enabled) cons_write("\b \b", 3);
+    char removed_c = kbd_buffer.buffer[kbd_buffer.cursor];
+    if (kbd_buffer.echo_enabled) {
+        if (removed_c < 32) {
+            // Effacement des caractères de contrôle (double pour effacer le ^ en +)
+            cons_write("\b \b\b \b", 6);
+        } else {
+            // Effacement des caractères lambda
+            cons_write("\b \b", 3);
+        }
+    }
     return kbd_buffer.buffer[kbd_buffer.cursor];
 }
 
@@ -67,6 +89,36 @@ void cons_echo(int on)
 
 void keyboard_data(char *str)
 {
+    if (strcmp(str, "\033[A") == 0) //flèche du haut
+    {
+        char *cmd = history_up();
+        while (kbd_buffer_backspace() >= 0); // effacer le buffer
+        if (cmd != NULL)
+        {
+            for (char c = *cmd; c != '\0'; c = *(++cmd)) {
+                kbd_buffer_push(c);
+            }
+        }
+        return;
+    }
+    if (strcmp(str, "\033[B") == 0) //flèche du bas
+    {
+        char *cmd = history_down();
+        while (kbd_buffer_backspace() >= 0); // effacer le buffer
+        if (cmd != NULL)
+        {
+            for (char c = *cmd; c != '\0'; c = *(++cmd)) {
+                kbd_buffer_push(c);
+            }
+        }
+        return;
+    }
+    reset_up_count();
+    if (strcmp(str, "\033[C") == 0 || strcmp(str, "\033[D") == 0)
+    {
+        // ignorer flèche gauche et droite
+        return;
+    }
     for (char c = *str; c != '\0'; c = *(++str)) {
         switch (c)
         {
@@ -77,13 +129,7 @@ void keyboard_data(char *str)
         case CR:
             cons_write("\n", 1);
             kbd_buffer_push(c);
-            if (!queue_empty(&blocked_io_processes))
-            {
-                process_t *p = queue_out(&blocked_io_processes, process_t, next);
-                p->state = STATE_READY;
-                queue_add(p, &head_ready, process_t, next, prio);
-                schedule();
-            }
+            wakeup_waiting_io_processes();
             break;
         case '\002':
             if (kbd_buffer.count == 0 || kbd_buffer.buffer[kbd_buffer.cursor] == CR || kbd_buffer.buffer[kbd_buffer.cursor] == HT) break;
@@ -91,13 +137,34 @@ void keyboard_data(char *str)
             kbd_buffer.count--;
             if (kbd_buffer.echo_enabled) traite_car('\b');
             break;
+        case 3:
+            if (kbd_buffer.echo_enabled) {
+                cons_write("^C\n", 3);
+            }
+            if (running_process->pid != 0 && !strcmp(running_process->name, "sh")) {
+                //si pas idle et shell alors on kill le running_process
+                kill(running_process->pid);
+            } else {
+                while (kbd_buffer_backspace() >= 0);
+                kbd_buffer_push(CR);
+                wakeup_waiting_io_processes();
+            }
+            return;
         default:
-            kbd_buffer_push(c);
+            if (c < 32) { // cas des caractères de contrôle
+                if (kbd_buffer.echo_enabled) {
+                    char ctrl_str[2] = {'^', c+'@'};
+                    cons_write(ctrl_str, 2);
+                }
+                kbd_buffer_push(c);
+                break;
+            }
+            if (c <= 126) {
+                kbd_buffer_push(c);
+            } //si au dessus de 126, on ne l'affiche pas
             break;
         }
-
     }
-
 }
 
 int cons_read(char *string, unsigned long length)
@@ -115,13 +182,13 @@ int cons_read(char *string, unsigned long length)
             schedule();
         }
         kbd_buffer_pop(&c);
+        string[size] = c;
         if (c == CR)
             break;
-        string[size] = c;
 
     }
 
     string[size] = '\0';
-
+    history_add(string);
     return size;
 }
