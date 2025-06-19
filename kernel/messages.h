@@ -1,9 +1,10 @@
 #ifndef MESSAGES_H
 #define MESSAGES_H
 
-#include "../shared/queue.h"
+#include <queue.h>
 
 #define MAX_NB_QUEUE 10
+#define MAX_QUEUE_CAPACITY (0x3000000 - 0x2800000) // user_stack_heap_end - user_stack_heap
 
 extern unsigned int NB_QUEUE;
 

@@ -7,12 +7,12 @@
 #include "cpu.h"
 #include "stdio.h"
 #include "mem.h"
-#include "../shared/debug.h"
-#include "../shared/stdint.h"
-#include "../shared/queue.h"
+#include <debug.h>
+#include <stdint.h>
+#include <queue.h>
 
 #define REQUIRED_STACK_SIZE 16
-#define MAX_STACK_SIZE 0xFFFFFFFF
+#define MAX_STACK_SIZE (0x1000000 - 0x145d400) // mem_heap_end - mem_head
 
 #define NUMBER_REGISTERS 5
 #define PROCESS_NAME_MAX 64
@@ -195,5 +195,6 @@ int getpid(void);
  */
 void wait_clock(unsigned long clock);
 
+void ps(void);
 
 #endif //PROCESSUS_H

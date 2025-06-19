@@ -18,6 +18,8 @@
 .global current_clock
 .global cons_echo
 .global cons_read
+.global ps
+.global print_history
 
 exit:
     pushl %ebx
@@ -187,4 +189,14 @@ cons_read:
     movl 8+4(%esp), %ecx  
     int $0x49
     popl %ebx
+    ret
+    
+ps:
+    movl $20, %eax
+    int $0x49
+    ret
+
+print_history:
+    movl $21, %eax
+    int $0x49
     ret

@@ -1,6 +1,7 @@
 #include "display.h"
 #include "keyboard.h"
 #include "process.h"
+#include "history.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -67,6 +68,31 @@ void cons_echo(int on)
 
 void keyboard_data(char *str)
 {
+    if (strcmp(str, "\033[A") == 0)
+    {
+        char *cmd = history_up();
+        while (kbd_buffer_backspace() >= 0); // Clear the buffer
+        if (cmd != NULL)
+        {
+            for (char c = *cmd; c != '\0'; c = *(++cmd)) {
+                kbd_buffer_push(c);
+            }
+        }
+        return;
+    }
+    if (strcmp(str, "\033[B") == 0)
+    {
+        char *cmd = history_down();
+        while (kbd_buffer_backspace() >= 0); // Clear the buffer
+        if (cmd != NULL)
+        {
+            for (char c = *cmd; c != '\0'; c = *(++cmd)) {
+                kbd_buffer_push(c);
+            }
+        }
+        return;
+    }
+
     for (char c = *str; c != '\0'; c = *(++str)) {
         switch (c)
         {
@@ -115,13 +141,13 @@ int cons_read(char *string, unsigned long length)
             schedule();
         }
         kbd_buffer_pop(&c);
+        string[size] = c;
         if (c == CR)
             break;
-        string[size] = c;
 
     }
 
     string[size] = '\0';
-
+    history_add(string);
     return size;
 }

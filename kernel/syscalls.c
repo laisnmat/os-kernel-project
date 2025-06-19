@@ -5,6 +5,7 @@
 #include "mem.h"
 #include "messages.h"
 #include "process.h"
+#include "history.h"
 #include <stdint.h>
 
 typedef struct
@@ -100,6 +101,12 @@ int syscalls_handler_c(syscall_args_t *args)
             ret = -1;
         else
             ret = cons_read((char *)args->ebx, args->ecx);
+        break;
+    case 20:
+        ps();
+        break;
+    case 21:
+        print_history();
         break;
     default:
         break;

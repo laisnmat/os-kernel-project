@@ -1,7 +1,7 @@
 #include "start.h"
-#include "../shared/string.h"
+#include <string.h>
 #include "syscalls.h"
-#include "../shared/stdio.h"
+#include <stdio.h>
 
 int TESTFAILED = 0;
 
