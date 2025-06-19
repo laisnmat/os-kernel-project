@@ -108,6 +108,9 @@ int syscalls_handler_c(syscall_args_t *args)
     case 21:
         print_history();
         break;
+    case 22:
+        ret = killall((char *)args->ebx);
+        break;
     default:
         break;
     }

@@ -133,6 +133,24 @@ int kill(int pid)
     return 0;
 }
 
+int killall(const char *name)
+{
+    if (name == NULL || strlen(name) == 0)
+    {
+        return -1; // Nom invalide
+    }
+    int killed_count = 0;
+    for (int i = 0; i < NBPROC; i++)
+    {
+        if (process_array[i] != NULL && strcmp(process_array[i]->name, name) == 0)
+        {
+            kill(process_array[i]->pid);
+            killed_count++;
+        }
+    }
+    return killed_count;
+}
+
 int waitpid(int pid, int *retvalp)
 {
     bool wait_any_child = (pid < 0);

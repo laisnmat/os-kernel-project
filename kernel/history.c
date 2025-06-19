@@ -80,7 +80,7 @@ void print_history(void)
     {
         unsigned int idx = (oldest + i) % HISTORY_SIZE;
         if (strlen(history.buffer[idx]) > 0)
-            __printf("\033[%dm%d: \033[0m%s\n", secondary_color, i + 1, history.buffer[idx]);
+            __printf("%d: %s\n", i + 1, history.buffer[idx]);
     }
 }
 

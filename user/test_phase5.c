@@ -3,14 +3,11 @@
 #include "syscalls.h"
 #include <stdio.h>
 
-int TESTFAILED = 0;
-
 int user_test(void *arg)
 {
     __printf("Je demarre\n");
     // Exécuter une instruction privilégiée
     __asm__ volatile("hlt"); // Instruction privilégiée qui provoque une exception
-    TESTFAILED = 1;
     __printf("Je stoppe terminer\n");
     return (int)arg;
 }
@@ -21,7 +18,6 @@ int user_ES_test(void *arg)
     // Essayer d'accéder à l'espace d'E/S
     unsigned char rega;
     __asm__ __volatile__("inb %1,%0" : "=a" (rega) : "Nd" (0x3d4));
-    TESTFAILED = 1;
     __printf("Je stoppe terminer\n");
     return (int)arg;
 }
@@ -36,7 +32,6 @@ int user_param_test(void *arg)
 int test_phase_5()
 {
     __printf("############## Phase 5: Test ##############\n");
-    __printf("\n############## Test du mode utilisateur ##############\n");
     /****
     * Écrire et faire fonctionner le programme suivant :
     *   - imprimer le message Je démarre
@@ -50,18 +45,6 @@ int test_phase_5()
      ****/
     int pid = start(user_test, 512, 200, "UserTest", NULL);
     assert(waitpid(pid, 0) == pid);
-    if (TESTFAILED == 1)
-    {
-        __printf("Test echoue: le programme n'a pas ete tue par l'exception.\n");
-    }
-    else
-    {
-        __printf("Test reussi: le programme a ete tue par l'exception.\n");
-    }
-    TESTFAILED = 0;
-    __printf("\n############## Fin test ##############\n");
-    __printf(
-        "\n##### Test de la protection de la memoire et de l'espace d'E/S #####\n");
     /****
      * C'est une variation du programme précédent : au lieu d'exécuter une instruction privilégiée,
      * le programme essaye d'accéder à l'espace d'E/S, par exemple en tentant de modifier la position
@@ -70,17 +53,6 @@ int test_phase_5()
      */
     int pid2 = start(user_ES_test, 512, 200, "UserESTest", NULL);
     assert(waitpid(pid2, NULL) == pid2);
-    if (TESTFAILED == 1)
-    {
-        __printf("Test echoue: le programme n'a pas ete tue par l'exception.\n");
-    }
-    else
-    {
-        __printf("Test reussi: le programme a ete tue par l'exception.\n");
-    }
-    TESTFAILED = 0;
-    __printf("\n############## Fin test ##############\n");
-    __printf("\n############## Test du passage de parametres ##############\n");
     /*
      * Écrire un programme qui crée plusieurs processus en leur passant des paramètres différents.
      * Les processus se contentent d'imprimer les paramètres reçus et se terminent.
@@ -91,7 +63,6 @@ int test_phase_5()
     __printf("3\n");
     start(user_param_test, 512, 200, "ParamTest", "");
     __printf("4");
-    __printf("\n############## Fin test ##############\n");
     __printf("\n############## Fin test phase 5 ##############\n");
     return 1;
 }

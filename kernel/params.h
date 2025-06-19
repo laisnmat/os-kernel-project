@@ -44,8 +44,8 @@ extern uint32_t LIG_CURSOR;
 extern uint32_t COL_CURSOR;
 
 
-static const int primary_color = VERT_CLAIR + 10;
-static const int secondary_color = CYAN_CLAIR + 10;
-static const int tertiary_color = VERT + 10;
+extern int primary_color;
+extern int secondary_color;
+extern int tertiary_color;
 
 #endif

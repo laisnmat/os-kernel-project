@@ -20,6 +20,7 @@
 .global cons_read
 .global ps
 .global print_history
+.global killall
 
 exit:
     pushl %ebx
@@ -199,4 +200,12 @@ ps:
 print_history:
     movl $21, %eax
     int $0x49
+    ret
+
+killall:
+    pushl %ebx
+    movl $22, %eax
+    movl 4+4(%esp), %ebx
+    int $0x49
+    popl %ebx
     ret

@@ -1,12 +1,14 @@
 # Copyright (C) 2001-2003 by Simon Nieuviarts
 
 # Files to compile
-FILES=$(wildcard *.S *.c) printf.c sprintf.c doprnt.c panic.c string.c
+FILES=$(wildcard *.S *.c lib/*.c) printf.c sprintf.c doprnt.c panic.c string.c
 DIRS=. ../shared
 
 # Directory and output object files
 OUTPUT := out
-OBJS   := $(addprefix $(OUTPUT)/, $(patsubst %.S, %.o, $(patsubst %.c, %.o, $(FILES))))
+LIB_OUTPUT := $(OUTPUT)/lib
+OBJS   := $(addprefix $(OUTPUT)/, $(patsubst %.S, %.o, $(patsubst %.c, %.o, $(filter-out lib/%.c,$(FILES))))) \
+	$(addprefix $(LIB_OUTPUT)/, $(notdir $(patsubst %.S, %.o, $(patsubst %.c, %.o, $(filter lib/%.c,$(FILES))))))
 
 CC=gcc -m32
 AS=gcc -m32
@@ -51,6 +53,9 @@ $(OUTPUT)/%.o: %.S
 $(OUTPUT)/%.o: %.c
 	$(CCL) -c $< -o $@
 
+$(LIB_OUTPUT)/%.o: lib/%.c
+	$(CCL) -c $< -o $@
+
 $(OUTPUT)/%.s: %.c
 	$(CCL) -S -c $< -o $@
 
@@ -61,10 +66,12 @@ user.bin: user.debug
 	objcopy -O binary $< $@
 
 # Create build directory for targets but don't depends on its creation date
-$(OBJS): | $(OUTPUT)
-$(DEPS): | $(OUTPUT)
+$(OBJS): | $(OUTPUT) $(LIB_OUTPUT)
+$(DEPS): | $(OUTPUT) $(LIB_OUTPUT)
 $(OUTPUT):
-	mkdir $@
+	mkdir -p $@
+$(LIB_OUTPUT):
+	mkdir -p $@
 
 clean:
 	rm -rf $(OUTPUT) user.bin user.debug

@@ -140,6 +140,8 @@ void exit(int retval);
 
 int kill(int pid);
 
+int killall(const char *name);
+
 /**
  * @brief Attente et récupération de la valeur de retour d'un fils terminé
  *
