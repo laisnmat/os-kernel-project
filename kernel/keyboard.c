@@ -92,7 +92,7 @@ void keyboard_data(char *str)
         }
         return;
     }
-
+    reset_up_count();
     for (char c = *str; c != '\0'; c = *(++str)) {
         switch (c)
         {

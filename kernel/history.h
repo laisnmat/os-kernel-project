@@ -19,5 +19,6 @@ void history_add(const char *cmd);
 char *history_up(void);
 char *history_down(void);
 void print_history(void);
+void reset_up_count(void);
 
 #endif // HISTORY_H

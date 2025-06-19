@@ -43,8 +43,8 @@ char *history_up(void)
 {
     if (history.count == 0)
         return NULL;
-    if (history.up_count >= history.count - 1)
-        return history.buffer[history.cursor_read - 1];
+    if (history.up_count >= history.count)
+        return history.buffer[history.cursor_read];
     if (history.cursor_read == history.cursor_write)
     {
         history.cursor_read = circ_dec(history.cursor_write, HISTORY_SIZE);
@@ -58,10 +58,8 @@ char *history_up(void)
 
 char *history_down(void)
 {
-    if (history.count == 0)
+    if (history.count == 0 || history.up_count == 0)
         return NULL;
-    if (history.cursor_read == history.cursor_write)
-        return NULL; // Déjà au plus récent
     history.cursor_read = circ_inc(history.cursor_read, HISTORY_SIZE);
     if (history.cursor_read == history.cursor_write)
     {
@@ -84,4 +82,10 @@ void print_history(void)
         if (strlen(history.buffer[idx]) > 0)
             __printf("\033[%dm%d: \033[0m%s\n", secondary_color, i + 1, history.buffer[idx]);
     }
+}
+
+void reset_up_count(void)
+{
+    history.up_count = 0;
+    history.cursor_read = history.cursor_write;
 }
